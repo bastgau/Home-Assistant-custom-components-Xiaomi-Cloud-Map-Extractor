@@ -8,8 +8,15 @@ from typing import Any, Self, Mapping
 import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
-    CONF_HOST, CONF_TOKEN, CONF_MAC, CONF_USERNAME, CONF_PASSWORD, CONF_MODEL,
-                                 CONF_DEVICE_ID, CONF_NAME)
+    CONF_DEVICE_ID,
+    CONF_HOST,
+    CONF_MAC,
+    CONF_MODEL,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_TOKEN,
+    CONF_USERNAME,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.device_registry import format_mac
@@ -33,7 +40,6 @@ from .connector.utils.exceptions import (
 )
 from .connector.vacuums.base.model import VacuumApi
 from .connector.xiaomi_cloud.connector import XiaomiCloudConnector, XiaomiCloudDeviceInfo
-from .connector.xiaomi_cloud.const import AVAILABLE_SERVERS
 from .const import (
     DOMAIN,
     CONF_USED_MAP_API,
@@ -68,7 +74,6 @@ class XiaomiCloudMapExtractorFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize."""
         self._username: str | None = None
         self._password: str | None = None
-        self._server: str | None = None
         self._cloud_vacuums: list[XiaomiCloudDeviceInfo] = []
         self._cloud_vacuum: XiaomiCloudDeviceInfo | None = None
         self._connector: XiaomiCloudConnector | None = None
@@ -110,7 +115,7 @@ class XiaomiCloudMapExtractorFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="auth_method_selection",
             menu_options=[
                 "auth_credentials",
-                "auth_qr_server"
+                "auth_qr"
             ],
         )
 
@@ -122,10 +127,9 @@ class XiaomiCloudMapExtractorFlowHandler(ConfigFlow, domain=DOMAIN):
 
             self._username = user_input.get(CONF_USERNAME)
             self._password = user_input.get(CONF_PASSWORD)
-            self._server = user_input.get(CONF_SERVER)
             session_creator = lambda: async_create_clientsession(self.hass)
 
-            self._connector = XiaomiCloudConnector(session_creator, self._server)
+            self._connector = XiaomiCloudConnector(session_creator)
             try:
                 if await self._connector.login_with_credentials(self._username, self._password) is None:
                     errors["base"] = "cloud_login_error"
@@ -148,30 +152,11 @@ class XiaomiCloudMapExtractorFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="auth_credentials",
             data_schema=vol.Schema(
                 {
-                    vol.Optional(CONF_USERNAME): str,
-                    vol.Optional(CONF_PASSWORD): str,
-                    vol.Optional(CONF_SERVER, default='de'): vol.In(
-                        AVAILABLE_SERVERS
-                    )
+                    vol.Required(CONF_USERNAME): str,
+                    vol.Required(CONF_PASSWORD): str
                 }
             ),
             errors=errors
-        )
-
-    async def async_step_auth_qr_server(self: Self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
-        if user_input is not None:
-            self._server = user_input.get(CONF_SERVER)
-            return await self.async_step_auth_qr()
-
-        return self.async_show_form(
-            step_id="auth_qr_server",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(CONF_SERVER, default='de'): vol.In(
-                        AVAILABLE_SERVERS
-                    )
-                }
-            ),
         )
 
     async def async_step_auth_qr(self:Self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
@@ -180,7 +165,7 @@ class XiaomiCloudMapExtractorFlowHandler(ConfigFlow, domain=DOMAIN):
         if self._wait_for_login_task is None:
             if self._connector is None:
                 session_creator = lambda: async_create_clientsession(self.hass)
-                self._connector = XiaomiCloudConnector(session_creator, self._server)
+                self._connector = XiaomiCloudConnector(session_creator)
 
             try:
                 qr_data = await self._connector.login_with_qr_get_code()
@@ -212,7 +197,7 @@ class XiaomiCloudMapExtractorFlowHandler(ConfigFlow, domain=DOMAIN):
     async def _after_auth(self: Self) -> ConfigFlowResult:
 
         try:
-            devices_raw = await self._connector.get_devices(self._server)
+            devices_raw = await self._connector.get_devices()
         except Exception as e:
             _LOGGER.error(
                 "Unexpected exception while attempting to Miio cloud get devices"
@@ -220,15 +205,12 @@ class XiaomiCloudMapExtractorFlowHandler(ConfigFlow, domain=DOMAIN):
             _LOGGER.error(e, exc_info=True)
             return self.async_abort(reason="unknown")
 
-        if not devices_raw:
-            return self.async_show_form(
-                step_id="auth_method_selection",
-                errors={CONF_SERVER: "cloud_no_devices"},
-            )
-
         self._cloud_vacuums = [
             device for device in devices_raw if "vacuum" in device.spec_type
         ]
+
+        if len(self._cloud_vacuums) == 0:
+            return self.async_abort(reason="cloud_no_devices")
 
         if len(self._cloud_vacuums) == 1:
             self._cloud_vacuum = self._cloud_vacuums[0]
@@ -247,7 +229,7 @@ class XiaomiCloudMapExtractorFlowHandler(ConfigFlow, domain=DOMAIN):
 
         options: list[SelectOptionDict] = [
             SelectOptionDict(value=cloud_vacuum.device_id,
-                             label=f"{cloud_vacuum.name} - {cloud_vacuum.model} ({cloud_vacuum.mac})")
+                             label=f"[{cloud_vacuum.server}] {cloud_vacuum.name} - {cloud_vacuum.model} ({cloud_vacuum.mac})")
             for cloud_vacuum in self._cloud_vacuums
         ]
 
@@ -292,7 +274,7 @@ class XiaomiCloudMapExtractorFlowHandler(ConfigFlow, domain=DOMAIN):
                     data[CONF_NAME] = self._cloud_vacuum.name
                     data[CONF_USERNAME] = self._username
                     data[CONF_PASSWORD] = self._password
-                    data[CONF_SERVER] = self._server
+                    data[CONF_SERVER] = self._cloud_vacuum.server
                     data[CONF_USED_MAP_API] = used_map_api
                     result_entry = self.async_update_reload_and_abort(existing_entry, data=data)
                 else:
@@ -307,7 +289,7 @@ class XiaomiCloudMapExtractorFlowHandler(ConfigFlow, domain=DOMAIN):
                             CONF_NAME: self._cloud_vacuum.name,
                             CONF_USERNAME: self._username,
                             CONF_PASSWORD: self._password,
-                            CONF_SERVER: self._server,
+                            CONF_SERVER: self._cloud_vacuum.server,
                             CONF_USED_MAP_API: used_map_api,
                         },
                         options={

@@ -4,12 +4,13 @@
       "already_configured": "Device is already configured",
       "already_in_progress": "Configuration flow is already in progress",
       "unknown": "Unexpected error",
+      "cloud_no_devices": "No vacuums found for this Xiaomi Cloud account.",
       "reauth_successful": "Re-authentication was successful"
     },
     "error": {
       "invalid_captcha": "Invalid captcha provided, try again.",
-      "cloud_login_error": "Could not login to Xiaomi Miio Cloud, check the credentials.",
-      "cloud_no_devices": "No vacuums found in this Xiaomi Miio cloud account.",
+      "cloud_login_error": "Could not login to Xiaomi Cloud, check the credentials.",
+      "cloud_no_devices": "No vacuums found for this Xiaomi Cloud account.",
       "invalid_vacuum": "Connection to vacuum failed, please check the configuration."
     },
     "flow_title": "{name}",
@@ -18,22 +19,15 @@
         "description": "Choose login method.",
         "menu_options": {
           "auth_credentials": "Credentials",
-          "auth_qr_server": "QR code/login link"
+          "auth_qr": "QR code/login link"
         }
       },
       "auth_credentials": {
         "data": {
-          "country": "Server",
           "password": "Password",
           "username": "Username"
         },
-        "description": "Log in to the Xiaomi Miio cloud, see https://www.openhab.org/addons/bindings/miio/#country-servers for the cloud server to use."
-      },
-      "auth_qr_server": {
-        "data": {
-          "username": "Username"
-        },
-        "description": "Choose the server of Xiaomi Miio cloud, see https://www.openhab.org/addons/bindings/miio/#country-servers for more info."
+        "description": "Please provide Xiaomi Cloud credentials"
       },
       "auth_captcha": {
         "data": {
@@ -66,9 +60,12 @@
       },
       "select_vacuum": {
         "data": {
-          "select_vacuum": "Vacuum"
+          "select_vacuum": "Available vacuums"
         },
-        "description": "Select the vacuum to set up."
+        "description": "Select the vacuum to set up.",
+        "data_description": {
+          "select_vacuum": "[server] Name - model code (MAC address)"
+        }
       }
     },
     "progress": {
