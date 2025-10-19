@@ -11,12 +11,19 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.device_registry import DeviceInfo, CONNECTION_NETWORK_MAC
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from vacuum_map_parser_base.map_data import MapData, OutputObject
 
 from .connector.model import XiaomiCloudMapExtractorData
 from .connector.vacuums.base.model import VacuumApi
 from .const import CONF_SERVER, CONF_USED_MAP_API, DOMAIN
 from .coordinator import XiaomiCloudMapExtractorDataUpdateCoordinator
 from .types import XiaomiCloudMapExtractorConfigEntry
+
+
+def as_list_dict(o: list[OutputObject] | None) -> list[dict[str, Any]]:
+    if o is None:
+        return []
+    return list(map(lambda mo: mo.as_dict(), o))
 
 
 class XiaomiCloudMapExtractorEntity(CoordinatorEntity[XiaomiCloudMapExtractorDataUpdateCoordinator]):
@@ -61,17 +68,18 @@ class XiaomiCloudMapExtractorEntity(CoordinatorEntity[XiaomiCloudMapExtractorDat
     def _data(self: Self) -> XiaomiCloudMapExtractorData | None:
         return self.coordinator.data
 
+    def _map_data(self: Self) -> MapData | None:
+        if (data := self._data()) is None:
+            return None
+        return data.map_data
+
     @property
     def extra_state_attributes(self: Self) -> dict[str, Any]:
-        data = self._data()
-        if data is None:
+        if (data := self._data()) is None:
             return {}
         attributes = {}
         if data.last_update_timestamp:
             attributes["last_update_timestamp"] = data.last_update_timestamp
         if data.last_successful_update_timestamp:
             attributes["last_successful_update_timestamp"] = data.last_successful_update_timestamp
-        if data.map_data:
-            attributes["calibration_points"] = data.map_data.calibration()
-            attributes["rooms"] = data.map_data.rooms
         return attributes

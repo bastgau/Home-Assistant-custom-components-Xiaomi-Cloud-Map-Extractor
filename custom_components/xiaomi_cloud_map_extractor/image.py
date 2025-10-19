@@ -1,5 +1,5 @@
 import logging
-from typing import Self
+from typing import Self, Any
 
 from homeassistant.components.image import ImageEntity
 from homeassistant.core import HomeAssistant
@@ -50,3 +50,11 @@ class XiaomiCloudMapExtractorImageEntity(XiaomiCloudMapExtractorEntity, ImageEnt
     @property
     def name(self: Self) -> str:
         return "Live Map"
+
+    @property
+    def extra_state_attributes(self: Self) -> dict[str, Any]:
+        attrs = super().extra_state_attributes
+        if (map_data := self._map_data()) is not None:
+            attrs["calibration_points"] = map_data.calibration()
+            attrs["rooms"] = {k: v.as_dict() for k, v in (map_data.rooms or {}).items()}
+        return attrs

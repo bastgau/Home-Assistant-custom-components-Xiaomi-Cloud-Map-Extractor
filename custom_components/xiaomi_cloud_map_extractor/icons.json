@@ -1,0 +1,43 @@
+{
+  "entity": {
+    "camera": {
+      "live_map": {
+        "default": "mdi:floor-plan"
+      }
+    },
+    "image": {
+      "live_map": {
+        "default": "mdi:floor-plan"
+      }
+    },
+    "sensor": {
+      "no_go_areas": {
+        "default": "mdi:floor-plan"
+      },
+      "charger_position": {
+        "default": "mdi:power-plug"
+      },
+      "vacuum_position": {
+        "default": "mdi:robot-vacuum"
+      },
+      "vacuum_room_id": {
+        "default": "mdi:floor-plan"
+      },
+      "vacuum_room_name": {
+        "default": "mdi:floor-plan"
+      },
+      "no_carpet_areas": {
+        "default": "mdi:floor-plan"
+      },
+      "no_mopping_areas": {
+        "default": "mdi:floor-plan"
+      },
+      "cleaned_rooms_ids": {
+        "default": "mdi:floor-plan"
+      },
+      "goto_position": {
+        "default": "mdi:target-variant"
+      }
+    }
+  }
+}
