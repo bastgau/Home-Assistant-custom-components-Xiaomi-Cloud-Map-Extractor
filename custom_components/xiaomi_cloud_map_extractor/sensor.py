@@ -16,46 +16,18 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-
 from vacuum_map_parser_base.map_data import MapData
-from .entity import XiaomiCloudMapExtractorEntity, as_list_dict
+
+from .entity import XiaomiCloudMapExtractorEntity
 from .coordinator import XiaomiCloudMapExtractorDataUpdateCoordinator
 from .types import XiaomiCloudMapExtractorConfigEntry
+from .connector.utils.list_operations import as_list_dict, len_len
 
 
 @dataclass(frozen=True, kw_only=True)
 class XiaomiCloudMapExtractorSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[MapData], StateType]
     attributes_fn: Callable[[MapData], dict[str, Any]] = lambda _: {}
-
-"""
-      # - carpet_map
-      # - charger
-      # - cleaned_rooms
-      # - country
-      # - goto
-      - goto_path
-      - goto_predicted_path
-      - image
-      - is_empty
-      - map_name
-      - mop_path
-      # - no_carpet_areas
-      # - no_go_areas
-      # - no_mopping_areas
-      - obstacles
-      - ignored_obstacles
-      - obstacles_with_photo
-      - ignored_obstacles_with_photo
-      - path
-      # - room_numbers
-      # - rooms
-      # - vacuum_position
-      # - vacuum_room
-      # - vacuum_room_name
-      - walls
-      - zones
-"""
 
 
 SENSOR_TYPES: tuple[XiaomiCloudMapExtractorSensorEntityDescription, ...] = (
@@ -142,6 +114,124 @@ SENSOR_TYPES: tuple[XiaomiCloudMapExtractorSensorEntityDescription, ...] = (
         translation_key="goto_position",
         value_fn=lambda map_data: json.dumps(map_data.goto.as_dict()) if map_data.goto else None,
         attributes_fn=lambda map_data: map_data.goto.as_dict() if map_data.goto else {},
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        entity_registry_visible_default=False,
+    ),
+    XiaomiCloudMapExtractorSensorEntityDescription(
+        key="goto_path",
+        translation_key="goto_path",
+        suggested_display_precision=0,
+        value_fn=lambda map_data: len_len(map_data.goto_path and map_data.goto_path.path or []),
+        attributes_fn=lambda map_data: map_data.goto_path.as_dict() if map_data.goto_path else {},
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        entity_registry_visible_default=False,
+    ),
+    XiaomiCloudMapExtractorSensorEntityDescription(
+        key="goto_predicted_path",
+        translation_key="goto_predicted_path",
+        suggested_display_precision=0,
+        value_fn=lambda map_data: len_len(map_data.predicted_path and map_data.predicted_path or []),
+        attributes_fn=lambda map_data: map_data.predicted_path.as_dict() if map_data.predicted_path else {},
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        entity_registry_visible_default=False,
+    ),
+    XiaomiCloudMapExtractorSensorEntityDescription(
+        key="mop_path",
+        translation_key="mop_path",
+        suggested_display_precision=0,
+        value_fn=lambda map_data: len_len(map_data.mop_path and map_data.mop_path.path or []),
+        attributes_fn=lambda map_data: map_data.mop_path.as_dict() if map_data.mop_path else {},
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        entity_registry_visible_default=False,
+    ),
+    XiaomiCloudMapExtractorSensorEntityDescription(
+        key="path",
+        translation_key="path",
+        suggested_display_precision=0,
+        value_fn=lambda map_data: len_len(map_data.path and map_data.path.path or []),
+        attributes_fn=lambda map_data: map_data.path.as_dict() if map_data.path else {},
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        entity_registry_visible_default=False,
+    ),
+    XiaomiCloudMapExtractorSensorEntityDescription(
+        key="obstacles",
+        translation_key="obstacles",
+        suggested_display_precision=0,
+        value_fn=lambda map_data: len(map_data.obstacles or []),
+        attributes_fn=lambda map_data: {"obstacles": as_list_dict(map_data.obstacles)},
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        entity_registry_visible_default=False,
+    ),
+    XiaomiCloudMapExtractorSensorEntityDescription(
+        key="ignored_obstacles",
+        translation_key="ignored_obstacles",
+        suggested_display_precision=0,
+        value_fn=lambda map_data: len(map_data.ignored_obstacles or []),
+        attributes_fn=lambda map_data: {"obstacles": as_list_dict(map_data.ignored_obstacles)},
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        entity_registry_visible_default=False,
+    ),
+    XiaomiCloudMapExtractorSensorEntityDescription(
+        key="obstacles_with_photo",
+        translation_key="obstacles_with_photo",
+        suggested_display_precision=0,
+        value_fn=lambda map_data: len(map_data.obstacles_with_photo or []),
+        attributes_fn=lambda map_data: {"obstacles": as_list_dict(map_data.obstacles_with_photo)},
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        entity_registry_visible_default=False,
+    ),
+    XiaomiCloudMapExtractorSensorEntityDescription(
+        key="ignored_obstacles_with_photo",
+        translation_key="ignored_obstacles_with_photo",
+        suggested_display_precision=0,
+        value_fn=lambda map_data: len(map_data.ignored_obstacles_with_photo or []),
+        attributes_fn=lambda map_data: {"obstacles": as_list_dict(map_data.ignored_obstacles_with_photo)},
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        entity_registry_visible_default=False,
+    ),
+    XiaomiCloudMapExtractorSensorEntityDescription(
+        key="walls",
+        translation_key="walls",
+        suggested_display_precision=0,
+        value_fn=lambda map_data: len(map_data.walls or []),
+        attributes_fn=lambda map_data: {"walls": as_list_dict(map_data.walls)},
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        entity_registry_visible_default=False,
+    ),
+    XiaomiCloudMapExtractorSensorEntityDescription(
+        key="zones",
+        translation_key="zones",
+        suggested_display_precision=0,
+        value_fn=lambda map_data: len(map_data.zones or []),
+        attributes_fn=lambda map_data: {"zones": as_list_dict(map_data.zones)},
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        entity_registry_visible_default=False,
+    ),
+    XiaomiCloudMapExtractorSensorEntityDescription(
+        key="map_name",
+        translation_key="map_name",
+        value_fn=lambda map_data: map_data.map_name,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         entity_registry_visible_default=False,

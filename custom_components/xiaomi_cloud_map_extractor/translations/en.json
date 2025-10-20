@@ -263,6 +263,22 @@
         }
       }
     },
+    "binary_sensor": {
+      "is_map_empty": {
+        "name": "Is map empty",
+        "state_attributes": {
+          "last_update_timestamp": {
+            "name": "Last update"
+          },
+          "last_successful_update_timestamp": {
+            "name": "Last successful update"
+          },
+          "areas": {
+            "name": "Areas"
+          }
+        }
+      }
+    },
     "sensor": {
       "no_go_areas": {
         "name": "No-go areas",
@@ -403,6 +419,203 @@
           },
           "a": {
             "name": "Angle"
+          }
+        }
+      },
+      "goto_path": {
+        "name": "Go-to path",
+        "unit_of_measurement": "points",
+        "state_attributes": {
+          "last_update_timestamp": {
+            "name": "Last update"
+          },
+          "last_successful_update_timestamp": {
+            "name": "Last successful update"
+          },
+          "point_length": {
+            "name": "Point length"
+          },
+          "point_size": {
+            "name": "Point size"
+          },
+          "angle": {
+            "name": "Angle"
+          },
+          "path": {
+            "name": "Path"
+          }
+        }
+      },
+      "goto_predicted_path": {
+        "name": "Go-to predicted path",
+        "unit_of_measurement": "points",
+        "state_attributes": {
+          "last_update_timestamp": {
+            "name": "Last update"
+          },
+          "last_successful_update_timestamp": {
+            "name": "Last successful update"
+          },
+          "point_length": {
+            "name": "Point length"
+          },
+          "point_size": {
+            "name": "Point size"
+          },
+          "angle": {
+            "name": "Angle"
+          },
+          "path": {
+            "name": "Path"
+          }
+        }
+      },
+      "mop_path": {
+        "name": "Mop path",
+        "unit_of_measurement": "points",
+        "state_attributes": {
+          "last_update_timestamp": {
+            "name": "Last update"
+          },
+          "last_successful_update_timestamp": {
+            "name": "Last successful update"
+          },
+          "point_length": {
+            "name": "Point length"
+          },
+          "point_size": {
+            "name": "Point size"
+          },
+          "angle": {
+            "name": "Angle"
+          },
+          "path": {
+            "name": "Path"
+          }
+        }
+      },
+      "path": {
+        "name": "Vacuum path",
+        "unit_of_measurement": "points",
+        "state_attributes": {
+          "last_update_timestamp": {
+            "name": "Last update"
+          },
+          "last_successful_update_timestamp": {
+            "name": "Last successful update"
+          },
+          "point_length": {
+            "name": "Point length"
+          },
+          "point_size": {
+            "name": "Point size"
+          },
+          "angle": {
+            "name": "Angle"
+          },
+          "path": {
+            "name": "Path"
+          }
+        }
+      },
+      "obstacles": {
+        "name": "Obstacles",
+        "unit_of_measurement": "obstacles",
+        "state_attributes": {
+          "last_update_timestamp": {
+            "name": "Last update"
+          },
+          "last_successful_update_timestamp": {
+            "name": "Last successful update"
+          },
+          "obstacles": {
+            "name": "Obstacles"
+          }
+        }
+      },
+      "ignored_obstacles": {
+        "name": "Ignored obstacles",
+        "unit_of_measurement": "obstacles",
+        "state_attributes": {
+          "last_update_timestamp": {
+            "name": "Last update"
+          },
+          "last_successful_update_timestamp": {
+            "name": "Last successful update"
+          },
+          "obstacles": {
+            "name": "Obstacles"
+          }
+        }
+      },
+      "obstacles_with_photo": {
+        "name": "Obstacles with photo",
+        "unit_of_measurement": "obstacles",
+        "state_attributes": {
+          "last_update_timestamp": {
+            "name": "Last update"
+          },
+          "last_successful_update_timestamp": {
+            "name": "Last successful update"
+          },
+          "obstacles": {
+            "name": "Obstacles"
+          }
+        }
+      },
+      "ignored_obstacles_with_photo": {
+        "name": "Ignored obstacles with photo",
+        "unit_of_measurement": "obstacles",
+        "state_attributes": {
+          "last_update_timestamp": {
+            "name": "Last update"
+          },
+          "last_successful_update_timestamp": {
+            "name": "Last successful update"
+          },
+          "obstacles": {
+            "name": "Obstacles"
+          }
+        }
+      },
+      "walls": {
+        "name": "Virtual walls",
+        "unit_of_measurement": "walls",
+        "state_attributes": {
+          "last_update_timestamp": {
+            "name": "Last update"
+          },
+          "last_successful_update_timestamp": {
+            "name": "Last successful update"
+          },
+          "walls": {
+            "name": "Walls"
+          }
+        }
+      },
+      "zones": {
+        "name": "Zones",
+        "unit_of_measurement": "zones",
+        "state_attributes": {
+          "last_update_timestamp": {
+            "name": "Last update"
+          },
+          "last_successful_update_timestamp": {
+            "name": "Last successful update"
+          },
+          "zones": {
+            "name": "Zones"
+          }
+        }
+      },
+      "map_name": {
+        "name": "Map name",
+        "state_attributes": {
+          "last_update_timestamp": {
+            "name": "Last update"
+          },
+          "last_successful_update_timestamp": {
+            "name": "Last successful update"
           }
         }
       }

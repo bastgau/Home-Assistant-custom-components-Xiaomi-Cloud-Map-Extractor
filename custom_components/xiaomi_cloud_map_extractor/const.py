@@ -11,6 +11,7 @@ PLATFORMS: list[Platform] = [
     Platform.CAMERA,
     Platform.IMAGE,
     Platform.SENSOR,
+    Platform.BINARY_SENSOR,
 ]
 
 CONTENT_TYPE: Final = "image/png"

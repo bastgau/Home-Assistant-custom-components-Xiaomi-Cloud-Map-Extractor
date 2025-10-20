@@ -20,12 +20,6 @@ from .coordinator import XiaomiCloudMapExtractorDataUpdateCoordinator
 from .types import XiaomiCloudMapExtractorConfigEntry
 
 
-def as_list_dict(o: list[OutputObject] | None) -> list[dict[str, Any]]:
-    if o is None:
-        return []
-    return list(map(lambda mo: mo.as_dict(), o))
-
-
 class XiaomiCloudMapExtractorEntity(CoordinatorEntity[XiaomiCloudMapExtractorDataUpdateCoordinator]):
     _attr_has_entity_name = True
     _host: str

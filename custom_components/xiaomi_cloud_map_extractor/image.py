@@ -1,7 +1,7 @@
 import logging
 from typing import Self, Any
 
-from homeassistant.components.image import ImageEntity
+from homeassistant.components.image import ImageEntity, ImageEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -33,6 +33,10 @@ class XiaomiCloudMapExtractorImageEntity(XiaomiCloudMapExtractorEntity, ImageEnt
         XiaomiCloudMapExtractorEntity.__init__(self, coordinator, config_entry)
         ImageEntity.__init__(self, hass)
         self.content_type = CONTENT_TYPE
+        self.entity_description = ImageEntityDescription(
+            key="live_map",
+            translation_key="live_map"
+        )
 
     def image(self: Self) -> bytes | None:
         data = self._data()
@@ -46,10 +50,6 @@ class XiaomiCloudMapExtractorImageEntity(XiaomiCloudMapExtractorEntity, ImageEnt
         if data is None:
             return None
         return data.last_successful_update_timestamp
-
-    @property
-    def name(self: Self) -> str:
-        return "Live Map"
 
     @property
     def extra_state_attributes(self: Self) -> dict[str, Any]:

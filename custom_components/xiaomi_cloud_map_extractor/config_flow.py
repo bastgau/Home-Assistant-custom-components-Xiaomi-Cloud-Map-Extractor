@@ -297,12 +297,19 @@ class XiaomiCloudMapExtractorFlowHandler(ConfigFlow, domain=DOMAIN):
                             CONF_COLORS: self._default_colors(),
                             CONF_ROOM_COLORS: {},
                             CONF_DRAWABLES: [
-                                e.value for e in Drawable if
-                                e != Drawable.ROOM_NAMES and "ignored" not in e
+                                e.value
+                                for e in Drawable
+                                if e
+                                not in [
+                                    Drawable.ROOM_NAMES,
+                                    Drawable.NO_CARPET_AREAS,
+                                    Drawable.IGNORED_OBSTACLES,
+                                    Drawable.IGNORED_OBSTACLES_WITH_PHOTO,
+                                ]
                             ],
                             CONF_SIZES: {k.value: v for k, v in Sizes.SIZES.items()},
                             CONF_TEXTS: [],
-                        }
+                        },
                     )
                 return result_entry
 

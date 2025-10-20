@@ -1,7 +1,7 @@
 import logging
 from typing import Self, Any
 
-from homeassistant.components.camera import Camera
+from homeassistant.components.camera import Camera, CameraEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -32,6 +32,12 @@ class XiaomiCloudMapExtractorCamera(XiaomiCloudMapExtractorEntity, Camera):
         XiaomiCloudMapExtractorEntity.__init__(self, coordinator, config_entry)
         Camera.__init__(self)
         self.content_type = CONTENT_TYPE
+        self.entity_description = CameraEntityDescription(
+            key="live_map",
+            translation_key="live_map",
+            entity_registry_enabled_default=False,
+            entity_registry_visible_default=False,
+        )
 
     @property
     def frame_interval(self: Self) -> float:
@@ -42,10 +48,6 @@ class XiaomiCloudMapExtractorCamera(XiaomiCloudMapExtractorEntity, Camera):
         if data is None:
             return None
         return data.map_image
-
-    @property
-    def name(self: Self) -> str:
-        return "Live Map"
 
     @property
     def extra_state_attributes(self: Self) -> dict[str, Any]:
