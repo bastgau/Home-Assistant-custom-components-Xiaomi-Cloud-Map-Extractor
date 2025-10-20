@@ -618,6 +618,21 @@
             "name": "Last successful update"
           }
         }
+      },
+      "rooms": {
+        "name": "Rooms",
+        "unit_of_measurement": "rooms",
+        "state_attributes": {
+          "last_update_timestamp": {
+            "name": "Last update"
+          },
+          "last_successful_update_timestamp": {
+            "name": "Last successful update"
+          },
+          "rooms": {
+            "name": "Rooms"
+          }
+        }
       }
     }
   }

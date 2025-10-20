@@ -75,6 +75,9 @@
       },
       "map_name": {
         "default": "mdi:map-search"
+      },
+      "rooms": {
+        "default": "mdi:floor-plan"
       }
     }
   }

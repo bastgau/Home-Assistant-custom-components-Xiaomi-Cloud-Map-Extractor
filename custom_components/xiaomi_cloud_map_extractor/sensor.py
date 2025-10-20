@@ -236,6 +236,17 @@ SENSOR_TYPES: tuple[XiaomiCloudMapExtractorSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         entity_registry_visible_default=False,
     ),
+    XiaomiCloudMapExtractorSensorEntityDescription(
+        key="rooms",
+        translation_key="rooms",
+        suggested_display_precision=0,
+        value_fn=lambda map_data: len(map_data.rooms or {}),
+        attributes_fn=lambda map_data: {k: v.as_dict() for k, v in (map_data.rooms or {}).items()},
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        entity_registry_visible_default=False,
+    ),
 )
 
 
