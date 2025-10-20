@@ -22,6 +22,7 @@ from .types import XiaomiCloudMapExtractorConfigEntry
 
 class XiaomiCloudMapExtractorEntity(CoordinatorEntity[XiaomiCloudMapExtractorDataUpdateCoordinator]):
     _attr_has_entity_name = True
+    _entity_component_unrecorded_attributes = frozenset({"path", "zones", "walls", "obstacles", "areas", "calibration_points", "rooms"})
     _host: str
     _token: str
     _mac: str
