@@ -59,6 +59,7 @@ class XiaomiCloudMapExtractorData:
     last_update_timestamp: datetime | None = None
     last_successful_update_timestamp: datetime | None = None
     status: XiaomiCloudMapExtractorConnectorStatus = XiaomiCloudMapExtractorConnectorStatus.UNKNOWN
+    additional_vacuum_data: dict[str, Any] | None = None
 
     def as_dict(self: Self) -> dict[str, Any]:
         map_image_dict = self.map_data and self.map_data.image and {
@@ -93,7 +94,8 @@ class XiaomiCloudMapExtractorData:
             "cleaned_rooms": list(map(lambda a: asdict(a), self.map_data.cleaned_rooms or [])),
             "map_name": self.map_data.map_name,
             "additional_parameters": self.map_data.additional_parameters,
-            "calibration": self.map_data.calibration()
+            "calibration": self.map_data.calibration(),
+            "additional_vacuum_data": self.additional_vacuum_data,
         }
         return {
             'map_data': map_data_dict,

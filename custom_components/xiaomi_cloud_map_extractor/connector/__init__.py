@@ -154,6 +154,8 @@ class XiaomiCloudMapExtractorConnector:
         except TwoFactorAuthRequiredException as e:
             self._map_cache.status = XiaomiCloudMapExtractorConnectorStatus.TWO_FACTOR_REQUIRED
             self._map_cache.two_factor_url = e.url
+        if self._vacuum_connector:
+            self._map_cache.additional_vacuum_data = self._vacuum_connector.additional_data()
 
     def _create_device(self: Self, device_details: XiaomiCloudDeviceInfo) -> BaseXiaomiCloudVacuum:
         store_map_path = self._config.store_map_path if self._config.store_map_raw else None

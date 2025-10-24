@@ -1,5 +1,5 @@
 import logging
-from typing import Self
+from typing import Self, Any
 
 from miio import DreameVacuum, DeviceException
 
@@ -88,3 +88,7 @@ class DreameCloudVacuum(BaseXiaomiCloudVacuumV2):
         super().store_map(raw_map_data)
         with open(f"{self._store_map_path}/map_data_{self.model}.enc.key", "w") as enc_key_file:
             enc_key_file.write(self._enc_key)
+
+    def additional_data(self: Self) -> dict[str, Any]:
+        super_data = super().additional_data()
+        return {**super_data, "enc_key": self._enc_key}

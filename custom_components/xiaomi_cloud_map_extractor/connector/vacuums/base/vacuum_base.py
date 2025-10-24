@@ -1,6 +1,6 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import Self
+from typing import Self, Any
 
 from vacuum_map_parser_base.config.color import ColorsPalette
 from vacuum_map_parser_base.config.drawable import Drawable
@@ -106,3 +106,6 @@ class BaseXiaomiCloudVacuum(ABC):
     def store_map(self: Self, raw_map_data: bytes) -> None:
         with open(f"{self._store_map_path}/map_data_{self.model}.{self.map_archive_extension}", "wb") as raw_map_file:
             raw_map_file.write(raw_map_data)
+
+    def additional_data(self: Self) -> dict[str, Any]:
+        return {}
