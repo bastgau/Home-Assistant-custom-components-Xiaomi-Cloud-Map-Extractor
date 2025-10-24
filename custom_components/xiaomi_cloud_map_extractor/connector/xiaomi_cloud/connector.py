@@ -28,6 +28,7 @@ from ..utils.exceptions import (
     FailedConnectionException,
     CaptchaRequiredException
 )
+from ..utils.dict_operations import path_extractor
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -634,9 +635,9 @@ class XiaomiCloudConnector:
         homes_response = await self.execute_api_call_encrypted(url, params)
         if homes_response is None:
             return homes
-        if homelist := homes_response["result"].get("homelist", None):
+        if homelist := path_extractor(homes_response, "result.homelist"):
             homes.extend([XiaomiCloudHome(int(home["id"]), home["uid"]) for home in homelist])
-        if homelist := homes_response["result"].get("share_home_list", None):
+        if homelist := path_extractor(homes_response, "result.share_home_list"):
             homes.extend([XiaomiCloudHome(int(home["id"]), home["uid"]) for home in homelist])
         return homes
 
@@ -654,7 +655,11 @@ class XiaomiCloudConnector:
                 }
             )
         }
-        if (response := await self.execute_api_call_encrypted(url, params)) is None:
+        try:
+            if (response := await self.execute_api_call_encrypted(url, params)) is None:
+                return []
+        except FailedConnectionException as e:
+            _LOGGER.error("Failed to get devices from home: %s", e)
             return []
 
         if (raw_devices := response["result"]["device_info"]) is None:
