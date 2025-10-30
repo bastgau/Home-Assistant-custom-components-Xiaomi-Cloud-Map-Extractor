@@ -224,11 +224,12 @@ class XiaomiCloudMapExtractorFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle multiple cloud devices found."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            self._cloud_vacuum = next(filter(lambda v: v.device_id == user_input["select_vacuum"], self._cloud_vacuums))
+            self._cloud_vacuum = next(filter(
+                lambda v: f"{v.server}_{v.device_id}" == user_input["select_vacuum"], self._cloud_vacuums))
             return await self.async_step_confirm_data()
 
         options: list[SelectOptionDict] = [
-            SelectOptionDict(value=cloud_vacuum.device_id,
+            SelectOptionDict(value=f"{cloud_vacuum.server}_{cloud_vacuum.device_id}",
                              label=f"[{cloud_vacuum.server}] {cloud_vacuum.name} - {cloud_vacuum.model} ({cloud_vacuum.mac})")
             for cloud_vacuum in self._cloud_vacuums
         ]
