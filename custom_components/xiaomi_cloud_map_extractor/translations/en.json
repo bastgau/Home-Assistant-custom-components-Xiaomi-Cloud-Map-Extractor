@@ -227,7 +227,7 @@
   "entity": {
     "button": {
       "force_update": {
-        "name": "Force update",
+        "name": "Force map update",
         "state_attributes": {
           "last_update_timestamp": {
             "name": "Last update"
