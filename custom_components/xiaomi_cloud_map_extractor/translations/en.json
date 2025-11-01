@@ -285,9 +285,6 @@
           },
           "last_successful_update_timestamp": {
             "name": "Last successful update"
-          },
-          "areas": {
-            "name": "Areas"
           }
         }
       }
@@ -644,6 +641,19 @@
           },
           "rooms": {
             "name": "Rooms"
+          }
+        }
+      }
+    },
+    "switch": {
+      "auto_update": {
+        "name": "Update map",
+        "state_attributes": {
+          "last_update_timestamp": {
+            "name": "Last update"
+          },
+          "last_successful_update_timestamp": {
+            "name": "Last successful update"
           }
         }
       }

@@ -55,6 +55,7 @@ class XiaomiCloudMapExtractorConnector:
     _session_creator: Callable[[], ClientSession]
     _connector_config: XiaomiCloudConnectorConfig | None
     _forced_refresh: bool
+    _auto_update: bool
 
     def __init__(
         self: Self,
@@ -72,6 +73,7 @@ class XiaomiCloudMapExtractorConnector:
         self._server = None
         self._used_api = self._config.used_api
         self._forced_refresh = False
+        self._auto_update = True
 
     async def get_data(self: Self) -> XiaomiCloudMapExtractorData:
         if self._should_get_map():
@@ -136,7 +138,11 @@ class XiaomiCloudMapExtractorConnector:
         if self._forced_refresh:
             self._forced_refresh = False
             return True
-        return self._map_cache is None or self._vacuum_connector is None or self._vacuum_connector.should_update_map
+        return (
+            self._map_cache is None
+            or self._vacuum_connector is None
+            or (self._vacuum_connector.should_update_map and self._auto_update)
+        )
 
     async def _get_map(self: Self) -> None:
         try:
@@ -184,3 +190,9 @@ class XiaomiCloudMapExtractorConnector:
 
     def force_refresh(self):
         self._forced_refresh = True
+
+    def set_auto_updating(self, updating: bool) -> None:
+        self._auto_update = updating
+
+    def is_auto_updating(self) -> bool:
+        return self._auto_update

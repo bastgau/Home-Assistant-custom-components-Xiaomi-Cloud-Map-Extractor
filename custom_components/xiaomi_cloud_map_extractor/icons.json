@@ -84,6 +84,15 @@
       "rooms": {
         "default": "mdi:floor-plan"
       }
+    },
+    "switch": {
+      "auto_update": {
+        "default": "mdi:cloud-refresh",
+        "state": {
+          "on": "mdi:cloud-check",
+          "off": "mdi:cloud-cancel"
+        }
+      }
     }
   }
 }

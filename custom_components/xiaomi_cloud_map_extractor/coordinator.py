@@ -51,3 +51,9 @@ class XiaomiCloudMapExtractorDataUpdateCoordinator(DataUpdateCoordinator[XiaomiC
     async def force_update_data(self) -> None:
         self.connector.force_refresh()
         await self.async_request_refresh()
+
+    async def set_auto_updating(self, updating: bool) -> None:
+        self.connector.set_auto_updating(updating)
+
+    def is_auto_updating(self) -> bool:
+        return self.connector.is_auto_updating()
