@@ -47,3 +47,7 @@ class XiaomiCloudMapExtractorDataUpdateCoordinator(DataUpdateCoordinator[XiaomiC
         except XiaomiCloudMapExtractorException as err:
             _LOGGER.error(err)
             raise UpdateFailed(err) from err
+
+    async def force_update_data(self) -> None:
+        self.connector.force_refresh()
+        await self.async_request_refresh()

@@ -54,6 +54,7 @@ class XiaomiCloudMapExtractorConnector:
     _server: str | None
     _session_creator: Callable[[], ClientSession]
     _connector_config: XiaomiCloudConnectorConfig | None
+    _forced_refresh: bool
 
     def __init__(
         self: Self,
@@ -70,6 +71,7 @@ class XiaomiCloudMapExtractorConnector:
         self._status: XiaomiCloudMapExtractorConnectorStatus = XiaomiCloudMapExtractorConnectorStatus.UNINITIALIZED
         self._server = None
         self._used_api = self._config.used_api
+        self._forced_refresh = False
 
     async def get_data(self: Self) -> XiaomiCloudMapExtractorData:
         if self._should_get_map():
@@ -132,10 +134,12 @@ class XiaomiCloudMapExtractorConnector:
             raise DeviceNotFoundException()
 
     def _should_get_map(self: Self) -> bool:
+        if self._forced_refresh:
+            self._forced_refresh = False
+            return True
         return self._map_cache is None or self._vacuum_connector is None or self._vacuum_connector.should_update_map
 
     async def _get_map(self: Self) -> None:
-        self._map_cache.last_update_timestamp = datetime.now()
         try:
             await self._update()
             self._map_cache.status = XiaomiCloudMapExtractorConnectorStatus.OK
@@ -156,6 +160,8 @@ class XiaomiCloudMapExtractorConnector:
         except TwoFactorAuthRequiredException as e:
             self._map_cache.status = XiaomiCloudMapExtractorConnectorStatus.TWO_FACTOR_REQUIRED
             self._map_cache.two_factor_url = e.url
+        finally:
+            self._map_cache.last_update_timestamp = datetime.now()
         if self._vacuum_connector:
             self._map_cache.additional_vacuum_data = self._vacuum_connector.additional_data()
 
@@ -178,3 +184,6 @@ class XiaomiCloudMapExtractorConnector:
         )
         vacuum_class = AVAILABLE_VACUUM_PLATFORMS.get(self._used_api, UnsupportedCloudVacuum)
         return vacuum_class(vacuum_config)
+
+    def force_refresh(self):
+        self._forced_refresh = True

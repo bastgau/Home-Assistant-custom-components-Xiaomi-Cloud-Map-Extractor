@@ -225,6 +225,19 @@
     }
   },
   "entity": {
+    "button": {
+      "force_update": {
+        "name": "Force update",
+        "state_attributes": {
+          "last_update_timestamp": {
+            "name": "Last update"
+          },
+          "last_successful_update_timestamp": {
+            "name": "Last successful update"
+          }
+        }
+      }
+    },
     "camera": {
       "live_map": {
         "name": "Live map",
