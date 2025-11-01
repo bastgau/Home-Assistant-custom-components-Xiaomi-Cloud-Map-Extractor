@@ -107,12 +107,11 @@ class XiaomiCloudMapExtractorConnector:
             _LOGGER.debug("Initialized.")
 
         _LOGGER.debug("Downloading map...")
-        map_data, map_saved, map_raw_data = await self._vacuum_connector.get_map()
+        map_data, map_raw_data = await self._vacuum_connector.get_map()
         _LOGGER.debug("Downloaded map.")
         if map_data is None:
             raise FailedMapDownloadException()
         self._map_cache.map_data = map_data
-        self._map_cache.map_saved = map_saved
         self._map_cache.map_image = to_image(map_data)
         self._map_cache.map_data_raw = map_raw_data
 
@@ -166,7 +165,6 @@ class XiaomiCloudMapExtractorConnector:
             self._map_cache.additional_vacuum_data = self._vacuum_connector.additional_data()
 
     def _create_device(self: Self, device_details: XiaomiCloudDeviceInfo) -> BaseXiaomiCloudVacuum:
-        store_map_path = self._config.store_map_path if self._config.store_map_raw else None
         vacuum_config = VacuumConfig(
             self._cloud_connector,
             device_details,
@@ -180,7 +178,6 @@ class XiaomiCloudMapExtractorConnector:
             self._config.image_config,
             self._config.sizes,
             self._config.texts,
-            store_map_path
         )
         vacuum_class = AVAILABLE_VACUUM_PLATFORMS.get(self._used_api, UnsupportedCloudVacuum)
         return vacuum_class(vacuum_config)

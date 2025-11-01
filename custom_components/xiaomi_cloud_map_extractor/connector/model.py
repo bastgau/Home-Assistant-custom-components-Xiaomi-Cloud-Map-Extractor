@@ -46,9 +46,6 @@ class XiaomiCloudMapExtractorConnectorConfiguration:
     drawables: list[Drawable]
     sizes: Sizes
     texts: list[Text]
-    store_map_raw: bool
-    store_map_image: bool
-    store_map_path: str
 
 
 @dataclass
@@ -56,7 +53,6 @@ class XiaomiCloudMapExtractorData:
     map_data: MapData | None = None
     map_data_raw: bytes | None = None
     map_image: bytes | None = None
-    map_saved: bool = False
     two_factor_url: str | None = None
     last_update_timestamp: datetime | None = None
     last_successful_update_timestamp: datetime | None = None
@@ -102,7 +98,6 @@ class XiaomiCloudMapExtractorData:
             "map_data": map_data_dict,
             "map_data_raw": self.map_data_raw and base64.b64encode(self.map_data_raw).decode(),
             "map_image": self.map_image and base64.b64encode(self.map_image).decode(),
-            "map_saved": self.map_saved,
             "last_update_timestamp": self.last_update_timestamp and self.last_update_timestamp.strftime(
                 "%Y-%m-%d %H:%M:%S"),
             "last_successful_update_timestamp": self.last_successful_update_timestamp and self.last_successful_update_timestamp.strftime(

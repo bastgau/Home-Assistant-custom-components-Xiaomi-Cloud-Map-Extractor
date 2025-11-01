@@ -26,7 +26,6 @@ class VacuumConfig:
     image_config: ImageConfig
     sizes: Sizes
     texts: list[Text]
-    store_map_path: str | None
 
 
 class VacuumApi(StrEnum):

@@ -91,9 +91,6 @@ def to_configuration(entry: XiaomiCloudMapExtractorConfigEntry) -> XiaomiCloudMa
     drawables = [Drawable(e) for e in entry.options[CONF_DRAWABLES]]
     sizes = Sizes({Size(k): v for k, v in entry.options[CONF_SIZES].items()})
     texts = []
-    store_map_raw = False
-    store_map_image = False
-    store_map_path = ""
 
     config = XiaomiCloudMapExtractorConnectorConfiguration(
         host,
@@ -110,8 +107,5 @@ def to_configuration(entry: XiaomiCloudMapExtractorConfigEntry) -> XiaomiCloudMa
         drawables,
         sizes,
         texts,
-        store_map_raw,
-        store_map_image,
-        store_map_path,
     )
     return config
