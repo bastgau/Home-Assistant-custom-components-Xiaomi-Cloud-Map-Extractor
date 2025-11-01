@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 
+from aiohttp import ClientSession
 from homeassistant.const import (
     CONF_HOST,
     CONF_TOKEN,
@@ -46,7 +47,10 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: XiaomiCloudMapExtractorConfigEntry) -> bool:
     xcme_configuration = to_configuration(entry)
-    session_creator = lambda: async_create_clientsession(hass)
+
+    def session_creator() -> ClientSession:
+        return async_create_clientsession(hass)
+
     connector_config = await restore_connector_config(hass, xcme_configuration.mac)
     xcme_connector = XiaomiCloudMapExtractorConnector(session_creator, xcme_configuration, connector_config)
     xcme_update_coordinator = XiaomiCloudMapExtractorDataUpdateCoordinator(hass, xcme_connector)

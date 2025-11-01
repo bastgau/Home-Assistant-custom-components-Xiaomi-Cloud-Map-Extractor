@@ -185,7 +185,7 @@ class XiaomiCloudConnector:
             response_text = await response.text()
             _LOGGER.debug("Xiaomi cloud login - step 1 content: %s", response_text)
             response_json = to_json(response_text)
-        except:
+        except Exception:
             raise FailedLoginException()
 
         successful = response.status == 200 and "_sign" in response_json
@@ -217,7 +217,7 @@ class XiaomiCloudConnector:
             response_text = await response.text()
             _LOGGER.debug("Xiaomi cloud login - step 2 content: %s", response_text)
             response_json = to_json(response_text)
-        except:
+        except Exception:
             raise InvalidCredentialsException()
         if response.status == 200:
             if "ssecurity" in response_json:
@@ -253,7 +253,7 @@ class XiaomiCloudConnector:
             _LOGGER.debug("Xiaomi cloud login - step 3 status: %s", response.status)
             response_text = await response.text()
             _LOGGER.debug("Xiaomi cloud login - step 3 content: %s", response_text)
-        except:
+        except Exception:
             raise InvalidCredentialsException()
         if response.status == 200 and "serviceToken" in response.cookies:
             self._session_data.serviceToken = response.cookies.get("serviceToken").value
@@ -622,7 +622,7 @@ class XiaomiCloudConnector:
             try:
                 _LOGGER.debug("Downloading raw map from \"%s\"...", map_url)
                 response = await self._session_data.session.get(map_url)
-            except:
+            except Exception:
                 _LOGGER.debug("Downloading the map failed.")
                 return None
             if response.status == 200:

@@ -6,6 +6,7 @@ from asyncio import Task
 from typing import Any, Self, Mapping
 
 import voluptuous as vol
+from aiohttp import ClientSession
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_DEVICE_ID,
@@ -124,10 +125,11 @@ class XiaomiCloudMapExtractorFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         errors = {}
         if user_input is not None:
-
             self._username = user_input.get(CONF_USERNAME)
             self._password = user_input.get(CONF_PASSWORD)
-            session_creator = lambda: async_create_clientsession(self.hass)
+
+            def session_creator() -> ClientSession:
+                return async_create_clientsession(self.hass)
 
             self._connector = XiaomiCloudConnector(session_creator)
             try:
@@ -164,7 +166,10 @@ class XiaomiCloudMapExtractorFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if self._wait_for_login_task is None:
             if self._connector is None:
-                session_creator = lambda: async_create_clientsession(self.hass)
+
+                def session_creator() -> ClientSession:
+                    return async_create_clientsession(self.hass)
+
                 self._connector = XiaomiCloudConnector(session_creator)
 
             try:

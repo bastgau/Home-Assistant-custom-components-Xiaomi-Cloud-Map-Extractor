@@ -15,7 +15,7 @@ def path_extractor(json: dict[str, Any], path: str) -> Any | None:
 
     try:
         return extractor_arr(json, path.split("."))
-    except:
+    except Exception:
         return None
 
 
