@@ -15,8 +15,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .entity import XiaomiCloudMapExtractorEntity
 from .coordinator import XiaomiCloudMapExtractorDataUpdateCoordinator
+from .entity import XiaomiCloudMapExtractorEntity
 from .types import XiaomiCloudMapExtractorConfigEntry
 
 
@@ -49,6 +49,7 @@ async def async_setup_entry(
         XiaomiCloudMapExtractorButtonEntity(coordinator, config_entry, description)
         for description in BUTTON_TYPES
     )
+
 
 class XiaomiCloudMapExtractorButtonEntity(XiaomiCloudMapExtractorEntity, ButtonEntity):
     entity_description: XiaomiCloudMapExtractorButtonEntityDescription

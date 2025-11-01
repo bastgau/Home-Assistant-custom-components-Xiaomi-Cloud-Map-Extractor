@@ -179,7 +179,7 @@ class XiaomiCloudMapExtractorFlowHandler(ConfigFlow, domain=DOMAIN):
                 qr_image_b64 = base64.b64encode(qr_image).decode("utf-8")
                 placeholders["qr_image_b64"] = qr_image_b64
                 placeholders["login_link"] = login_link
-            except FailedLoginException as ex:
+            except FailedLoginException:
                 return self.async_abort(reason="qr_code_unavailable")
 
             _wait_for_login = self._connector.login_with_qr_wait_for_completion

@@ -69,5 +69,6 @@ def decrypt_rc4(password: str, payload: str) -> bytes:
     r.encrypt(bytes(1024))
     return r.encrypt(base64.b64decode(payload))
 
+
 def random_text(chr_from: int, chr_to: int, length: int) -> str:
     return "".join([chr(random.randint(chr_from, chr_to)) for _ in range(length)])

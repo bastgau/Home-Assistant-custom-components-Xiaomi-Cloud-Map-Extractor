@@ -16,8 +16,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from vacuum_map_parser_base.map_data import MapData
 
-from .entity import XiaomiCloudMapExtractorEntity
 from .coordinator import XiaomiCloudMapExtractorDataUpdateCoordinator
+from .entity import XiaomiCloudMapExtractorEntity
 from .types import XiaomiCloudMapExtractorConfigEntry
 
 
@@ -50,6 +50,7 @@ async def async_setup_entry(
         XiaomiCloudMapExtractorBinarySensorEntity(coordinator, config_entry, description)
         for description in SENSOR_TYPES
     )
+
 
 class XiaomiCloudMapExtractorBinarySensorEntity(XiaomiCloudMapExtractorEntity, BinarySensorEntity):
     entity_description: XiaomiCloudMapExtractorBinarySensorEntityDescription
