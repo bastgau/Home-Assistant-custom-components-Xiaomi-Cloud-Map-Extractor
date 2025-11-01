@@ -159,7 +159,7 @@ class XiaomiCloudMapExtractorFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors
         )
 
-    async def async_step_auth_qr(self:Self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+    async def async_step_auth_qr(self: Self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         placeholders = {}
 
         if self._wait_for_login_task is None:
@@ -185,11 +185,11 @@ class XiaomiCloudMapExtractorFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_show_progress_done(next_step_id="after_auth")
 
         return self.async_show_progress(
-                step_id="auth_qr",
-                progress_action="wait_for_login",
-                description_placeholders=placeholders,
-                progress_task=self._wait_for_login_task
-            )
+            step_id="auth_qr",
+            progress_action="wait_for_login",
+            description_placeholders=placeholders,
+            progress_task=self._wait_for_login_task,
+        )
 
     async def async_step_after_auth(self: Self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         return await self._after_auth()

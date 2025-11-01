@@ -46,11 +46,13 @@ class XiaomiCloudConnectorConfig:
     device_id: str
 
     @classmethod
-    def from_dict(cls, data: dict[str,str] | XiaomiCloudConnectorConfig) -> XiaomiCloudConnectorConfig:
+    def from_dict(
+        cls, data: dict[str, str] | XiaomiCloudConnectorConfig
+    ) -> XiaomiCloudConnectorConfig:
         _LOGGER.debug("Restoring connector config from data: %s", data)
         if isinstance(data, XiaomiCloudConnectorConfig):
             return data
-        expiration = data['expiration']
+        expiration = data["expiration"]
         if expiration is not None:
             expiration = datetime.datetime.fromisoformat(expiration)
         return cls(**{**data, "expiration": expiration})
@@ -567,13 +569,23 @@ class XiaomiCloudConnector:
         # self.install_service_token_cookies(self._serviceToken)  # Method not implemented
 
         # Update ids from cookies if available
-        user_id_cookie = self._session_data.session.cookie_jar.filter_cookies("https://account.xiaomi.com").get("userId") or \
-                         self._session_data.session.cookie_jar.filter_cookies("https://sts.api.io.mi.com").get("userId")
+        user_id_cookie = self._session_data.session.cookie_jar.filter_cookies(
+            "https://account.xiaomi.com"
+        ).get("userId") or self._session_data.session.cookie_jar.filter_cookies(
+            "https://sts.api.io.mi.com"
+        ).get(
+            "userId"
+        )
         if user_id_cookie:
             self._session_data.userId = user_id_cookie.value
 
-        cuserId_cookie = self._session_data.session.cookie_jar.filter_cookies("https://account.xiaomi.com").get("cUserId") or \
-                         self._session_data.session.cookie_jar.filter_cookies("https://sts.api.io.mi.com").get("cUserId")
+        cuserId_cookie = self._session_data.session.cookie_jar.filter_cookies(
+            "https://account.xiaomi.com"
+        ).get("cUserId") or self._session_data.session.cookie_jar.filter_cookies(
+            "https://sts.api.io.mi.com"
+        ).get(
+            "cUserId"
+        )
         if cuserId_cookie:
             self._session_data.cUserId = cuserId_cookie.value
 
@@ -641,8 +653,9 @@ class XiaomiCloudConnector:
             homes.extend([XiaomiCloudHome(int(home["id"]), home["uid"]) for home in homelist])
         return homes
 
-    async def _get_devices_from_home(self: Self, server: str, home_id: int, owner_id: int) -> list[
-        XiaomiCloudDeviceInfo]:
+    async def _get_devices_from_home(
+        self: Self, server: str, home_id: int, owner_id: int
+    ) -> list[XiaomiCloudDeviceInfo]:
         url = self.get_api_url(server) + "/v2/home/home_device_list"
         params = {
             "data": json.dumps(

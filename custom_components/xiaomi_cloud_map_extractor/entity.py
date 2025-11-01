@@ -11,7 +11,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.device_registry import DeviceInfo, CONNECTION_NETWORK_MAC
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from vacuum_map_parser_base.map_data import MapData, OutputObject
+from vacuum_map_parser_base.map_data import MapData
 
 from .connector.model import XiaomiCloudMapExtractorData
 from .connector.vacuums.base.model import VacuumApi
