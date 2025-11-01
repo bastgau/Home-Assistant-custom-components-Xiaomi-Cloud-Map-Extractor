@@ -17,10 +17,10 @@ async def save_connector_config(hass: HomeAssistant, mac: str, config: XiaomiClo
 async def restore_connector_config(hass: HomeAssistant, mac: str) -> XiaomiCloudConnectorConfig | None:
     store = _create_store(hass, mac)
     stored_data = await store.async_load()
-    if stored_data is None:
-        return None
-    connector_config = stored_data.get("connector_config", None)
-    if connector_config is None:
+    if (
+        stored_data is None
+        or (connector_config := stored_data.get("connector_config", None)) is None
+    ):
         return None
     return XiaomiCloudConnectorConfig.from_dict(connector_config)
 
