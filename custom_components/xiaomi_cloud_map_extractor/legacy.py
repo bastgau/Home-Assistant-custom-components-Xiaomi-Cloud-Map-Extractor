@@ -409,11 +409,10 @@ async def create_config_entry_data_from_yaml(
             mac = format_mac(device.mac)
             name = device.name
             server = device.server
-    except:
+    except BaseException:
         _LOGGER.error("Failed to connect to Xiaomi Cloud")
 
-
-    data={
+    data = {
         CONF_HOST: import_info[CONF_HOST],
         CONF_TOKEN: import_info[CONF_TOKEN],
         CONF_DEVICE_ID: device_id,
@@ -425,7 +424,7 @@ async def create_config_entry_data_from_yaml(
         CONF_SERVER: server,
         CONF_USED_MAP_API: import_info.get(LEGACY_CONF_FORCE_API, None),
     }
-    options={
+    options = {
         CONF_IMAGE_CONFIG: {
             **default_image_config(),
             CONF_IMAGE_CONFIG_SCALE: import_info[LEGACY_CONF_MAP_TRANSFORM][LEGACY_CONF_SCALE],
@@ -443,8 +442,7 @@ async def create_config_entry_data_from_yaml(
         CONF_DRAWABLES: [
             e.value
             for e in Drawable
-            if e
-               not in [
+            if e not in [
                    Drawable.ROOM_NAMES,
                    Drawable.NO_CARPET_AREAS,
                    Drawable.IGNORED_OBSTACLES,
@@ -487,5 +485,6 @@ def map_colors_map(
     data: dict[str, tuple[int, int, int] | tuple[int, int, int, int]],
 ) -> dict[str, tuple[int, int, int, int]]:
     return {
-        k: (tuple([*v]) if len(v) == 4 else tuple([*v, 255])) for k, v in data.items()
+        k: ((v[0], v[1], v[2]) if len(v) == 4 else (v[0], v[1], v[2], 255))
+        for k, v in data.items()
     }
