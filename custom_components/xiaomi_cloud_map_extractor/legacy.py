@@ -485,6 +485,6 @@ def map_colors_map(
     data: dict[str, tuple[int, int, int] | tuple[int, int, int, int]],
 ) -> dict[str, tuple[int, int, int, int]]:
     return {
-        k: ((v[0], v[1], v[2]) if len(v) == 4 else (v[0], v[1], v[2], 255))
+        k: ((v[0], v[1], v[2], v[3]) if len(v) == 4 else (v[0], v[1], v[2], 255))
         for k, v in data.items()
     }
