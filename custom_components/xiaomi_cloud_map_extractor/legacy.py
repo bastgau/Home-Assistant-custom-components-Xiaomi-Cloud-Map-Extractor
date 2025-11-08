@@ -409,8 +409,8 @@ async def create_config_entry_data_from_yaml(
             mac = format_mac(device.mac)
             name = device.name
             server = device.server
-    except BaseException:
-        _LOGGER.error("Failed to connect to Xiaomi Cloud")
+    except BaseException as e:
+        _LOGGER.error("Failed to connect to Xiaomi Cloud", exc_info=e)
 
     data = {
         CONF_HOST: import_info[CONF_HOST],

@@ -13,6 +13,7 @@ from .entity import XiaomiCloudMapExtractorEntity
 _LOGGER = logging.getLogger(__name__)
 KEY = "live_map"
 
+
 async def async_setup_entry(
         hass: HomeAssistant,
         config_entry: XiaomiCloudMapExtractorConfigEntry,
