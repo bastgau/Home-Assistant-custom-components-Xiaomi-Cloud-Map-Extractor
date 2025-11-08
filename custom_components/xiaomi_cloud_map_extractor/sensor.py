@@ -9,10 +9,9 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
+    DOMAIN,
 )
-from homeassistant.const import (
-    EntityCategory
-)
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -272,9 +271,8 @@ class XiaomiCloudMapExtractorSensorEntity(XiaomiCloudMapExtractorEntity, SensorE
             config_entry: XiaomiCloudMapExtractorConfigEntry,
             description: XiaomiCloudMapExtractorSensorEntityDescription,
     ) -> None:
-        super().__init__(coordinator, config_entry)
+        super().__init__(coordinator, config_entry, DOMAIN, description.key)
 
-        self._attr_unique_id = description.key
         self.entity_description = description
 
     @property

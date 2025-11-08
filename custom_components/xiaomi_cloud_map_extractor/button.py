@@ -8,10 +8,9 @@ from homeassistant.components.button import (
     ButtonEntity,
     ButtonEntityDescription,
     ButtonDeviceClass,
+    DOMAIN,
 )
-from homeassistant.const import (
-    EntityCategory
-)
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -60,9 +59,8 @@ class XiaomiCloudMapExtractorButtonEntity(XiaomiCloudMapExtractorEntity, ButtonE
             config_entry: XiaomiCloudMapExtractorConfigEntry,
             description: XiaomiCloudMapExtractorButtonEntityDescription,
     ) -> None:
-        super().__init__(coordinator, config_entry)
+        super().__init__(coordinator, config_entry, DOMAIN, description.key)
 
-        self._attr_unique_id = description.key
         self.entity_description = description
 
     async def async_press(self) -> None:
