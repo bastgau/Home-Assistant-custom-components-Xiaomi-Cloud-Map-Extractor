@@ -7,7 +7,7 @@ from typing import Any, Self, Mapping
 
 import voluptuous as vol
 from aiohttp import ClientSession
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, SOURCE_REAUTH
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_HOST,
@@ -59,7 +59,9 @@ from .const import (
     CONF_IMAGE_CONFIG_TRIM_RIGHT,
     CONF_CAPTCHA_CODE,
     CONF_TWO_FACTOR_CODE,
+    NAME,
 )
+from .legacy import create_config_entry_data_from_yaml
 from .options_flow import XiaomiCloudMapExtractorOptionsFlowHandler
 from .store import save_connector_config
 from .types import XiaomiCloudMapExtractorConfigEntry
@@ -88,6 +90,22 @@ class XiaomiCloudMapExtractorFlowHandler(ConfigFlow, domain=DOMAIN):
             config_entry: XiaomiCloudMapExtractorConfigEntry) -> XiaomiCloudMapExtractorOptionsFlowHandler:
         """Get the options flow."""
         return XiaomiCloudMapExtractorOptionsFlowHandler()
+
+    async def async_step_import(
+            self, import_info: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Import an entry."""
+
+        def session_creator() -> ClientSession:
+            return async_create_clientsession(self.hass)
+
+        data, options = await create_config_entry_data_from_yaml(import_info, session_creator)
+        self._async_abort_entries_match({CONF_HOST: import_info[CONF_HOST]})
+        return self.async_create_entry(
+            title=NAME,
+            data=data,
+            options=options,
+        )
 
     async def async_step_reauth(
             self, entry_data: Mapping[str, Any]
@@ -266,11 +284,21 @@ class XiaomiCloudMapExtractorFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_vacuum"
             else:
                 unique_id = format_mac(self._cloud_vacuum.mac)
-                existing_entry = await self.async_set_unique_id(
+
+                existing_entry = next(
+                    filter(
+                        lambda entry: entry.data[CONF_HOST] == host,
+                        self._async_current_entries(include_ignore=False),
+                    ),
+                    None,
+                )
+                await self.async_set_unique_id(
                     unique_id, raise_on_progress=False
                 )
+                if self.source != SOURCE_REAUTH:
+                    self._abort_if_unique_id_configured()
                 await save_connector_config(self.hass, self._cloud_vacuum.mac, self._connector.to_config())
-                if existing_entry:
+                if existing_entry or self.source == SOURCE_REAUTH:
                     data = existing_entry.data.copy()
                     data[CONF_HOST] = host
                     data[CONF_TOKEN] = token
@@ -424,7 +452,8 @@ class XiaomiCloudMapExtractorFlowHandler(ConfigFlow, domain=DOMAIN):
             _LOGGER.error(e, exc_info=True)
             return False
 
-    def _default_image_config(self: Self) -> dict[str, float]:
+    @staticmethod
+    def _default_image_config() -> dict[str, float]:
         image_config = ImageConfig()
         return {
             CONF_IMAGE_CONFIG_SCALE: image_config.scale,

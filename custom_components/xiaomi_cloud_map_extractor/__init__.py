@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_DEVICE_ID
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from vacuum_map_parser_base.config.color import ColorsPalette, SupportedColor
 from vacuum_map_parser_base.config.drawable import Drawable
@@ -74,6 +75,8 @@ def to_configuration(entry: XiaomiCloudMapExtractorConfigEntry) -> XiaomiCloudMa
     host = entry.data[CONF_HOST]
     token = entry.data[CONF_TOKEN]
     device_id = entry.data[CONF_DEVICE_ID]
+    if device_id is None:
+        raise ConfigEntryAuthFailed()
     model = entry.data[CONF_MODEL]
     mac = entry.data[CONF_MAC]
     username = entry.data[CONF_USERNAME]
