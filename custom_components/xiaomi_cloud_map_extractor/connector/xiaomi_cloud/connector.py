@@ -744,7 +744,9 @@ class XiaomiCloudConnector:
         fields = generate_enc_params(url, "POST", signed_nonce, nonce, params, self._session_data.ssecurity)
 
         try:
+            _LOGGER.debug("Request URL: %s", url)
             response = await self._session_data.post(url, headers=headers, cookies=cookies, params=fields)
+            _LOGGER.debug("API response: %s", response)
             response_text = await response.text()
         except Exception as e:
             raise FailedConnectionException(e)

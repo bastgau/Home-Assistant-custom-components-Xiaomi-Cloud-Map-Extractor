@@ -71,21 +71,7 @@ class IjaiCloudVacuum(BaseXiaomiCloudVacuumV2):
         return self._ijai_map_data_parser
 
     async def get_map_url(self, map_name: str) -> str | None:
-        url = self._connector.get_api_url(
-            self._server) + '/v2/home/get_interim_file_url_pro'
-        params = {
-            "data": f'{{"obj_name":"{self._user_id}/{self._device_id}/{map_name}"}}'
-        }
-        api_response = await self._connector.execute_api_call_encrypted(url, params)
-        if (
-                api_response is None
-                or "result" not in api_response
-                or api_response["result"] is None
-                or "url" not in api_response["result"]):
-            _LOGGER.debug(
-                f"API returned {api_response['code']}" + "(" + api_response["message"] + ")")
-            return None
-        return api_response["result"]["url"]
+        return await self.get_fallback_map_url(map_name)
 
     def get_wifi_info_sn(self):
         wifi_info_sn = None

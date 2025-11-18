@@ -8,6 +8,7 @@ from vacuum_map_parser_base.map_data import MapData
 from vacuum_map_parser_dreame.map_data_parser import DreameMapDataParser
 from .base.model import VacuumConfig, VacuumApi
 from .base.vacuum_v2 import BaseXiaomiCloudVacuumV2
+from ..utils.dict_operations import path_extractor
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,10 +67,10 @@ class DreameCloudVacuum(BaseXiaomiCloudVacuumV2):
             if response is None:
                 return None
 
-            _key = response["result"]["out"][1]["value"]
+            _key = path_extractor(response, "result.out.1.value")
 
-            if len(_key) == 0:
-                self._robot_stamp = response["result"]["out"][2]["value"]
+            if _key is None or len(_key) == 0:
+                self._robot_stamp = path_extractor(response, "result.out.2.value")
                 return None
 
             _map_name = _key.split(",")
