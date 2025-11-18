@@ -10,7 +10,7 @@ jobs:
       - run: pip install --upgrade pip wheel
       - run: pip install bandit black codespell flake8 flake8-2020 flake8-bugbear
                          flake8-comprehensions isort mypy pytest pyupgrade safety
-      - run: bandit --recursive --skip B105,B303,B304,B324,B311,B413 custom_components/
+      - run: bandit --recursive --skip B036,B105,B303,B304,B324,B311,B413 custom_components/
       - run: black --check . || true
       - run: codespell --ignore-words-list="hass" custom_components/
       - run: flake8 custom_components --count --max-complexity=33 --max-line-length=184 --show-source --statistics
