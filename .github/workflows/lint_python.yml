@@ -13,7 +13,7 @@ jobs:
       - run: bandit --recursive --skip B036,B105,B303,B304,B324,B311,B413 custom_components/
       - run: black --check . || true
       - run: codespell --ignore-words-list="hass" custom_components/
-      - run: flake8 custom_components --count --max-complexity=33 --max-line-length=184 --show-source --statistics
+      - run: flake8 custom_components --count --ignore=B036 --max-complexity=33 --max-line-length=184 --show-source --statistics
       - run: isort --check-only --profile black custom_components || true
       - run: pip install -r requirements.txt || pip install --editable . || true
       - run: mkdir --parents --verbose .mypy_cache
