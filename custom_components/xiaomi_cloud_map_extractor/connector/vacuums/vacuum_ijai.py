@@ -1,13 +1,13 @@
-
 import logging
-from typing import Self
+from typing import Self, Any
 
 from miio.miot_device import MiotDevice
 from miio.exceptions import DeviceException
-
 from vacuum_map_parser_base.map_data import MapData
 from vacuum_map_parser_ijai.map_data_parser import IjaiMapDataParser
 from vacuum_map_parser_ijai.status_mapping import get_status_mapping
+from vacuum_map_parser_ijai.aes_decryptor import gen_md5_key
+
 from .base.vacuum_v2 import BaseXiaomiCloudVacuumV2
 from .base.model import VacuumConfig, VacuumApi
 from ..utils.exceptions import FailedConnectionException
@@ -142,3 +142,10 @@ class IjaiCloudVacuum(BaseXiaomiCloudVacuumV2):
             model=self.model,
             device_mac=self._mac)
         return self.map_data_parser.parse(decoded_map)
+
+    def additional_data(self: Self) -> dict[str, Any]:
+        super_data = super().additional_data()
+        if self._wifi_info_sn is None:
+            return super_data
+        enc_key = gen_md5_key(self._wifi_info_sn, str(self._user_id), str(self._device_id), self.model, self._mac)
+        return {**super_data, "enc_key": enc_key}
