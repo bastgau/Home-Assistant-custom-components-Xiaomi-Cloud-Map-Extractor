@@ -49,7 +49,7 @@ class XiaomiCloudConnectorConfig:
     def from_dict(
         cls, data: dict[str, str] | XiaomiCloudConnectorConfig
     ) -> XiaomiCloudConnectorConfig:
-        _LOGGER.debug("Restoring connector config from data: %s", data)
+        _LOGGER.debug("Restoring connector config...")
         if isinstance(data, XiaomiCloudConnectorConfig):
             return data
         expiration = data["expiration"]
