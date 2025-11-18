@@ -746,8 +746,8 @@ class XiaomiCloudConnector:
         try:
             _LOGGER.debug("Request URL: %s", url)
             response = await self._session_data.post(url, headers=headers, cookies=cookies, params=fields)
-            _LOGGER.debug("API response: %s", response)
             response_text = await response.text()
+            _LOGGER.debug("API response: %s", response_text)
         except Exception as e:
             raise FailedConnectionException(e)
         if response.status == 200:
