@@ -361,7 +361,7 @@ LEGACY_PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         }),
         vol.Optional(LEGACY_CONF_STORE_MAP_RAW, default=False): cv.boolean,
         vol.Optional(LEGACY_CONF_STORE_MAP_IMAGE, default=False): cv.boolean,
-        vol.Optional(LEGACY_CONF_STORE_MAP_PATH, default="/tmp"): cv.string,
+        vol.Optional(LEGACY_CONF_STORE_MAP_PATH, default=""): cv.string,
         vol.Optional(LEGACY_CONF_FORCE_API, default=None): vol.Or(vol.In(LEGACY_CONF_AVAILABLE_APIS), vol.Equal(None))
     })
 

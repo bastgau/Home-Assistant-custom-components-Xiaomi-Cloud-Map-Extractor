@@ -554,7 +554,7 @@ class XiaomiCloudConnector:
             service_token = sts_cookies.get("serviceToken")
             if service_token:
                 self._session_data.serviceToken = service_token.value
-        except Exception:
+        except BaseException:
             pass
         found = bool(self._session_data.serviceToken)
         text = await r.text()
