@@ -643,14 +643,16 @@ class XiaomiCloudConnector:
         }
 
         homes = []
-
-        homes_response = await self.execute_api_call_encrypted(url, params)
+        try:
+            homes_response = await self.execute_api_call_encrypted(url, params)
+        except TimeoutError:
+            homes_response = None
         if homes_response is None:
             return homes
-        if homelist := path_extractor(homes_response, "result.homelist"):
-            homes.extend([XiaomiCloudHome(int(home["id"]), home["uid"]) for home in homelist])
-        if homelist := path_extractor(homes_response, "result.share_home_list"):
-            homes.extend([XiaomiCloudHome(int(home["id"]), home["uid"]) for home in homelist])
+        if homes_list := path_extractor(homes_response, "result.homelist"):
+            homes.extend([XiaomiCloudHome(int(home["id"]), home["uid"]) for home in homes_list])
+        if homes_list := path_extractor(homes_response, "result.share_home_list"):
+            homes.extend([XiaomiCloudHome(int(home["id"]), home["uid"]) for home in homes_list])
         return homes
 
     async def _get_devices_from_home(
@@ -671,7 +673,7 @@ class XiaomiCloudConnector:
         try:
             if (response := await self.execute_api_call_encrypted(url, params)) is None:
                 return []
-        except FailedConnectionException as e:
+        except FailedConnectionException | TimeoutError as e:
             _LOGGER.error("Failed to get devices from home: %s", e)
             return []
 
@@ -705,10 +707,10 @@ class XiaomiCloudConnector:
         device_lists = await asyncio.gather(*device_coro_list)
         return [device for device_list in device_lists for device in device_list]
 
-    async def get_device_details(self: Self, token: str, server: Optional[str] = None) -> XiaomiCloudDeviceInfo | None:
+    async def get_device_details(self: Self, device_id: str, server: Optional[str] = None) -> XiaomiCloudDeviceInfo | None:
         devices = await self.get_devices(server)
-        matching_token = filter(lambda device: device.token == token, devices)
-        return next(matching_token, None)
+        matching_device = filter(lambda device: device.device_id == device_id, devices)
+        return next(matching_device, None)
 
     async def get_other_info(self: Self, device_id: str, method: str, parameters: dict) -> Any:
         url = self.get_api_url('sg') + "/v2/home/rpc/" + device_id

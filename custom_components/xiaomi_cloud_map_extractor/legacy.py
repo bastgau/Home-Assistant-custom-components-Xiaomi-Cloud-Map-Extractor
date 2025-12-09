@@ -443,11 +443,11 @@ async def create_config_entry_data_from_yaml(
             e.value
             for e in Drawable
             if e not in [
-                   Drawable.ROOM_NAMES,
-                   Drawable.NO_CARPET_AREAS,
-                   Drawable.IGNORED_OBSTACLES,
-                   Drawable.IGNORED_OBSTACLES_WITH_PHOTO,
-               ]
+                Drawable.ROOM_NAMES,
+                Drawable.NO_CARPET_AREAS,
+                Drawable.IGNORED_OBSTACLES,
+                Drawable.IGNORED_OBSTACLES_WITH_PHOTO,
+            ]
         ],
         CONF_SIZES: {
             **{k.value: v for k, v in Sizes.SIZES.items()},
