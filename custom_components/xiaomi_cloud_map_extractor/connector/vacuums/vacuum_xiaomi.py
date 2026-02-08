@@ -19,8 +19,6 @@ OFF_UPDATES = 3
 
 
 class XiaomiCloudVacuum(BaseXiaomiCloudVacuumV2):
-    WIFI_INFO_SN_LEN = 20
-
     def __init__(self, vacuum_config: VacuumConfig):
         super().__init__(vacuum_config)
         self._token = vacuum_config.token
@@ -75,16 +73,20 @@ class XiaomiCloudVacuum(BaseXiaomiCloudVacuumV2):
 
     def decode_and_parse(self, raw_map: bytes) -> MapData:
                       
-        raw_map= base64.decodebytes(json.loads(raw_map)["data"].encode('latin1'))
-        raw_map=raw_map.hex()
-
+        raw_map = base64.decodebytes(json.loads(raw_map)["data"].encode("latin1"))
+        raw_map = raw_map.hex()
         decoded_map = self.map_data_parser.unpack_map(
             raw_map,
-            model=self.model.replace("xiaomi","mi"),
-            device_id=str(self._device_id))
+            model=self.model.replace("xiaomi", "mi"),
+            device_id=str(self._device_id),
+        )
         return self.map_data_parser.parse(decoded_map)
-
+    
     def additional_data(self: Self) -> dict[str, Any]:
         super_data = super().additional_data()
-        enc_key = gen_md5_key(self.model.replace("xiaomi","mi"),str(self._device_id))
+        enc_key = gen_md5_key(
+            self.model.replace("xiaomi", "mi"),
+            str(self._device_id),
+        )
+
         return {**super_data, "enc_key": enc_key}
