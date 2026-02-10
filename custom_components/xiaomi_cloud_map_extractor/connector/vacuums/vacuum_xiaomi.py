@@ -8,6 +8,7 @@ from miio.exceptions import DeviceException
 from vacuum_map_parser_base.map_data import MapData
 from vacuum_map_parser_xiaomi.map_data_parser import XiaomiMapDataParser
 from vacuum_map_parser_xiaomi.status_mapping import get_status_mapping
+from vacuum_map_parser_xiaomi.map_prop_mapping import get_vacuum_map_property
 from vacuum_map_parser_xiaomi.aes_decryptor import gen_md5_key
 
 from .base.vacuum_v2 import BaseXiaomiCloudVacuumV2
@@ -36,6 +37,8 @@ class XiaomiCloudVacuum(BaseXiaomiCloudVacuumV2):
 
         self._status_mapping = get_status_mapping(self.model)
         self._off_counter = 0
+
+        self._vacuum_map = get_vacuum_map_property(self.model)
 
     @property
     def should_update_map(self: Self) -> bool:
@@ -67,6 +70,15 @@ class XiaomiCloudVacuum(BaseXiaomiCloudVacuumV2):
     @property
     def map_data_parser(self) -> XiaomiMapDataParser:
         return self._xiaomi_map_data_parser
+    
+    async def get_map_name(self: Self) -> str:
+        response = self._miot_device.get_property_by(self._vacuum_map.siid,
+                                                             self._vacuum_map.piid)[0].get("value")
+
+        if isinstance(response, int):
+            return response
+        else:
+            return json.loads(response).get("obj_name", "").split("/")[-1]
 
     async def get_map_url(self, map_name: str) -> str | None:
         return await self.get_fallback_map_url(map_name)
