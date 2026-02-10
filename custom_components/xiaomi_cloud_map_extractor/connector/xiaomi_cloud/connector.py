@@ -89,6 +89,7 @@ class XiaomiCloudSessionData:
     expiration: datetime.datetime | None = None
 
     def is_authenticated(self) -> bool:
+        _LOGGER.debug("Authentication check: " + self.__repr__())
         return self.serviceToken is not None and self.expiration > datetime.datetime.now() + datetime.timedelta(days=1)
 
     async def get(self: Self, url: StrOrURL, **kwargs: Unpack[_RequestOptions]):
@@ -645,7 +646,8 @@ class XiaomiCloudConnector:
         homes = []
         try:
             homes_response = await self.execute_api_call_encrypted(url, params)
-        except TimeoutError:
+        except Exception as e:
+            _LOGGER.debug("Error when retrieving homes from server %s: %s", server, e)
             homes_response = None
         if homes_response is None:
             return homes
