@@ -1,3 +1,4 @@
+import hashlib
 import logging
 from collections.abc import Callable
 from datetime import datetime
@@ -60,6 +61,7 @@ class XiaomiCloudMapExtractorConnector:
     _connector_config: XiaomiCloudConnectorConfig | None
     _forced_refresh: bool
     _auto_update: bool
+    _last_hash: str | None
 
     def __init__(
         self: Self,
@@ -78,6 +80,7 @@ class XiaomiCloudMapExtractorConnector:
         self._used_api = self._config.used_api
         self._forced_refresh = False
         self._auto_update = True
+        self._last_hash = None
 
     async def get_data(self: Self) -> XiaomiCloudMapExtractorData:
         if self._should_get_map():
@@ -155,6 +158,10 @@ class XiaomiCloudMapExtractorConnector:
             self._map_cache.status = XiaomiCloudMapExtractorConnectorStatus.OK
             self._map_cache.last_successful_update_timestamp = datetime.now()
             self._map_cache.two_factor_url = None
+            if self._last_hash != (new_hash := hashlib.sha256(self._map_cache.map_data_raw).hexdigest()):
+                self._last_hash = new_hash
+                self._map_cache.last_real_update_timestamp = self._map_cache.last_successful_update_timestamp
+
         except DeviceNotFoundException as e:
             self._map_cache.status = XiaomiCloudMapExtractorConnectorStatus.DEVICE_NOT_FOUND
             raise e
