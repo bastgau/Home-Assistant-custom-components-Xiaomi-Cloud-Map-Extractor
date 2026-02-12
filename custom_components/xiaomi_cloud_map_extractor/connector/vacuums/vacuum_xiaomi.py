@@ -1,23 +1,67 @@
+from dataclasses import dataclass
 import logging
 import json
 import base64
 from typing import Self, Any
+from dataclasses import dataclass
 
 from miio.miot_device import MiotDevice
 from miio.exceptions import DeviceException
 from vacuum_map_parser_base.map_data import MapData
 from vacuum_map_parser_xiaomi.map_data_parser import XiaomiMapDataParser
 from vacuum_map_parser_xiaomi.status_mapping import get_status_mapping
-from vacuum_map_parser_xiaomi.map_prop_mapping import get_vacuum_map_property
 from vacuum_map_parser_xiaomi.aes_decryptor import gen_md5_key
 
 from .base.vacuum_v2 import BaseXiaomiCloudVacuumV2
 from .base.model import VacuumConfig, VacuumApi
 from ..utils.exceptions import FailedConnectionException
 
+
 _LOGGER = logging.getLogger(__name__)
 OFF_UPDATES = 3
 
+@dataclass
+class XiaomiVacuumPropertyMapping:
+    """Dataclass containing mapping for map property"""
+
+    # vacuum map service id
+    siid: int = 10
+
+    # current map property id in vacuum map service
+    piid: int = 1
+
+_NON_STANDARD_MAP_PROP = [
+    (["xiaomi.vacuum.b108gl"], XiaomiVacuumPropertyMapping(siid=7)),
+    (
+        [
+            "xiaomi.vacuum.b108gp",
+            "xiaomi.vacuum.ov32gl",
+            "xiaomi.vacuum.ov43gl",
+            "xiaomi.vacuum.ov51",
+            "xiaomi.vacuum.ov81",
+        ],
+        XiaomiVacuumPropertyMapping(siid=9),
+    ),
+    (
+        [
+            "xiaomi.vacuum.b106bk",
+            "xiaomi.vacuum.b106eu",
+            "xiaomi.vacuum.b106tr",
+            "xiaomi.vacuum.b112",
+            "xiaomi.vacuum.b112bk",
+            "xiaomi.vacuum.b112gl",
+            "xiaomi.vacuum.b112tr",
+            "xiaomi.vacuum.c101",
+            "xiaomi.vacuum.c101eu",
+            "xiaomi.vacuum.c102",
+            "xiaomi.vacuum.c103",
+            "xiaomi.vacuum.c104",
+            "xiaomi.vacuum.d106gl",
+            "xiaomi.vacuum.e101gl",
+        ],
+        XiaomiVacuumPropertyMapping(piid=2),
+    ),
+]
 
 class XiaomiCloudVacuum(BaseXiaomiCloudVacuumV2):
     def __init__(self, vacuum_config: VacuumConfig):
@@ -38,7 +82,7 @@ class XiaomiCloudVacuum(BaseXiaomiCloudVacuumV2):
         self._status_mapping = get_status_mapping(self.model)
         self._off_counter = 0
 
-        self._vacuum_map = get_vacuum_map_property(self.model)
+        self._vacuum_map = next((mapping for models, mapping in _NON_STANDARD_MAP_PROP if self.model in models), XiaomiVacuumPropertyMapping())
 
     @property
     def should_update_map(self: Self) -> bool:
@@ -84,8 +128,13 @@ class XiaomiCloudVacuum(BaseXiaomiCloudVacuumV2):
         return await self.get_fallback_map_url(map_name)
 
     def decode_and_parse(self, raw_map: bytes) -> MapData:
-                      
-        raw_map = base64.decodebytes(json.loads(raw_map)["data"].encode("latin1"))
+        # Try parsing as JSON first (old format), otherwise use raw data directly (new format)
+        try:
+            raw_map = base64.decodebytes(json.loads(raw_map)["data"].encode("latin1"))
+        except (json.JSONDecodeError, KeyError, UnicodeDecodeError):
+            # Data may not be JSON-wrapped
+            pass
+        
         raw_map = raw_map.hex()
         decoded_map = self.map_data_parser.unpack_map(
             raw_map,
