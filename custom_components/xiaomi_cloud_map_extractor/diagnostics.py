@@ -7,7 +7,6 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
     CONF_MAC,
-    CONF_DEVICE_ID,
     CONF_HOST,
     CONF_NAME,
 )
@@ -26,7 +25,6 @@ async def async_get_config_entry_diagnostics(
     entry_data["data"].pop(CONF_HOST)
     entry_data["data"].pop(CONF_NAME)
     entry_data["data"].pop(CONF_TOKEN)
-    entry_data["data"].pop(CONF_DEVICE_ID)
     entry_data["data"].pop(CONF_PASSWORD)
     entry_data["data"].pop(CONF_USERNAME)
     entry_data["data"].pop(CONF_MAC)
