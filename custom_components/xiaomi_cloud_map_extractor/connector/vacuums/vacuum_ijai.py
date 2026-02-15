@@ -17,7 +17,7 @@ OFF_UPDATES = 3
 
 
 class IjaiCloudVacuum(BaseXiaomiCloudVacuumV2):
-    WIFI_INFO_SN_LEN = 18
+    WIFI_INFO_SN_POSSIBLE_LEN = [18, 20]
 
     def __init__(self, vacuum_config: VacuumConfig):
         super().__init__(vacuum_config)
@@ -83,10 +83,10 @@ class IjaiCloudVacuum(BaseXiaomiCloudVacuumV2):
         for piid in piids:
             data = self._miot_device.get_property_by(1, piid)
             if (
-                    "value" in data[0]
-                    and len(data[0]["value"]) == self.WIFI_INFO_SN_LEN
-                    and data[0]["value"].isalnum()
-                    and data[0]["value"].isupper()):
+                "value" in data[0]
+                and len(data[0]["value"]) in self.WIFI_INFO_SN_POSSIBLE_LEN
+                and data[0]["value"].isupper()
+            ):
                 wifi_info_sn = data[0]["value"]
                 break
 
@@ -101,7 +101,7 @@ class IjaiCloudVacuum(BaseXiaomiCloudVacuumV2):
                     cleaned_prop = cleaned_prop.split(';')[0]
 
                 if (
-                        len(cleaned_prop) == self.WIFI_INFO_SN_LEN
+                        len(cleaned_prop) in self.WIFI_INFO_SN_POSSIBLE_LEN
                         and cleaned_prop.isalnum()
                         and cleaned_prop.isupper()):
                     wifi_info_sn = cleaned_prop
