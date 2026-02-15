@@ -2,6 +2,7 @@ import base64
 import json
 import logging
 from typing import Self, Any
+from dataclasses import dataclass
 
 from miio.exceptions import DeviceException
 from miio.miot_device import MiotDevice
@@ -14,9 +15,52 @@ from .base.model import VacuumConfig, VacuumApi
 from .base.vacuum_v2 import BaseXiaomiCloudVacuumV2
 from ..utils.exceptions import FailedConnectionException
 
+
 _LOGGER = logging.getLogger(__name__)
 OFF_UPDATES = 3
 
+@dataclass
+class XiaomiVacuumPropertyMapping:
+    """Dataclass containing mapping for map property"""
+
+    # vacuum map service id
+    siid: int = 10
+
+    # current map property id in vacuum map service
+    piid: int = 1
+
+_NON_STANDARD_MAP_PROP = [
+    (["xiaomi.vacuum.b108gl"], XiaomiVacuumPropertyMapping(siid=7)),
+    (
+        [
+            "xiaomi.vacuum.b108gp",
+            "xiaomi.vacuum.ov32gl",
+            "xiaomi.vacuum.ov43gl",
+            "xiaomi.vacuum.ov51",
+            "xiaomi.vacuum.ov81",
+        ],
+        XiaomiVacuumPropertyMapping(siid=9),
+    ),
+    (
+        [
+            "xiaomi.vacuum.b106bk",
+            "xiaomi.vacuum.b106eu",
+            "xiaomi.vacuum.b106tr",
+            "xiaomi.vacuum.b112",
+            "xiaomi.vacuum.b112bk",
+            "xiaomi.vacuum.b112gl",
+            "xiaomi.vacuum.b112tr",
+            "xiaomi.vacuum.c101",
+            "xiaomi.vacuum.c101eu",
+            "xiaomi.vacuum.c102",
+            "xiaomi.vacuum.c103",
+            "xiaomi.vacuum.c104",
+            "xiaomi.vacuum.d106gl",
+            "xiaomi.vacuum.e101gl",
+        ],
+        XiaomiVacuumPropertyMapping(piid=2),
+    ),
+]
 
 class XiaomiCloudVacuum(BaseXiaomiCloudVacuumV2):
     def __init__(self, vacuum_config: VacuumConfig):
@@ -36,6 +80,8 @@ class XiaomiCloudVacuum(BaseXiaomiCloudVacuumV2):
 
         self._status_mapping = get_status_mapping(self.model)
         self._off_counter = 0
+
+        self._vacuum_map = next((mapping for models, mapping in _NON_STANDARD_MAP_PROP if self.model in models), XiaomiVacuumPropertyMapping())
 
     @property
     def should_update_map(self: Self) -> bool:
@@ -67,13 +113,27 @@ class XiaomiCloudVacuum(BaseXiaomiCloudVacuumV2):
     @property
     def map_data_parser(self) -> XiaomiMapDataParser:
         return self._xiaomi_map_data_parser
+    
+    async def get_map_name(self: Self) -> str:
+        response = self._miot_device.get_property_by(self._vacuum_map.siid,
+                                                             self._vacuum_map.piid)[0].get("value")
+
+        if isinstance(response, int):
+            return response
+        else:
+            return json.loads(response).get("obj_name", "").split("/")[-1]
 
     async def get_map_url(self, map_name: str) -> str | None:
         return await self.get_fallback_map_url(map_name)
 
     def decode_and_parse(self, raw_map: bytes) -> MapData:
-                      
-        raw_map = base64.decodebytes(json.loads(raw_map)["data"].encode("latin1"))
+        # Try parsing as JSON first (old format), otherwise use raw data directly (new format)
+        try:
+            raw_map = base64.decodebytes(json.loads(raw_map)["data"].encode("latin1"))
+        except (json.JSONDecodeError, KeyError, UnicodeDecodeError):
+            # Data may not be JSON-wrapped
+            pass
+        
         raw_map = raw_map.hex()
         decoded_map = self.map_data_parser.unpack_map(
             raw_map,

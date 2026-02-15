@@ -66,4 +66,5 @@ API_EXCEPTIONS = {
     "viomi.vacuum.v38": VacuumApi.ROIDMI,
     "xiaomi.vacuum.b106eu": VacuumApi.IJAI,
     "xiaomi.vacuum.c103": VacuumApi.IJAI,
+    "xiaomi.vacuum.d106gl": VacuumApi.IJAI,
 }
