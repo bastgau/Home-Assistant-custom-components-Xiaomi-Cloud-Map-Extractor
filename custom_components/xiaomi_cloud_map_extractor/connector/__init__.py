@@ -159,8 +159,11 @@ class XiaomiCloudMapExtractorConnector:
             self._map_cache.last_successful_update_timestamp = datetime.now()
             self._map_cache.two_factor_url = None
             if self._last_hash != (new_hash := hashlib.sha256(self._map_cache.map_data_raw).hexdigest()):
+                _LOGGER.debug("Old hash: '%s', New hash: '%s'", self._last_hash, new_hash)
                 self._last_hash = new_hash
                 self._map_cache.last_real_update_timestamp = self._map_cache.last_successful_update_timestamp
+            else:
+                _LOGGER.debug("Hash not changed: '%s'", self._last_hash)
 
         except DeviceNotFoundException as e:
             self._map_cache.status = XiaomiCloudMapExtractorConnectorStatus.DEVICE_NOT_FOUND
