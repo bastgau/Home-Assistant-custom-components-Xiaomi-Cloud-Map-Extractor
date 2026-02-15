@@ -1,3 +1,4 @@
+from datetime import datetime
 import logging
 from typing import Self, Any
 
@@ -45,11 +46,11 @@ class XiaomiCloudMapExtractorImageEntity(XiaomiCloudMapExtractorEntity, ImageEnt
         return data.map_image
 
     @property
-    def image_last_updated(self: Self):
+    def image_last_updated(self: Self) -> datetime | None:
         data = self._data()
         if data is None:
             return None
-        return data.last_successful_update_timestamp
+        return data.last_real_update_timestamp
 
     @property
     def extra_state_attributes(self: Self) -> dict[str, Any]:

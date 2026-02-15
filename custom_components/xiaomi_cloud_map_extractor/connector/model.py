@@ -56,21 +56,17 @@ class XiaomiCloudMapExtractorData:
     two_factor_url: str | None = None
     last_update_timestamp: datetime | None = None
     last_successful_update_timestamp: datetime | None = None
+    last_real_update_timestamp: datetime | None = None
     status: XiaomiCloudMapExtractorConnectorStatus = XiaomiCloudMapExtractorConnectorStatus.UNKNOWN
     additional_vacuum_data: dict[str, Any] | None = None
 
     def as_dict(self: Self) -> dict[str, Any]:
-        map_image_dict = self.map_data and self.map_data.image and {
-            **self.map_data.image.as_dict(),
-            "image_bytes": base64.b64encode(self.map_data.image.data.tobytes()).decode()
-        }
-
         map_data_dict = self.map_data and {
             "blocks": self.map_data.blocks,
             "charger": self.map_data.charger and self.map_data.charger.as_dict(),
             "goto": self.map_data.goto and self.map_data.goto.as_dict(),
             "goto_path": self.map_data.goto_path and self.map_data.goto_path.as_dict(),
-            "image": map_image_dict,
+            "image": self.map_data and self.map_data.image and self.map_data.image.as_dict(),
             "no_go_areas": as_list_of_dict(self.map_data.no_go_areas),
             "no_mopping_areas": as_list_of_dict(self.map_data.no_mopping_areas),
             "no_carpet_areas": as_list_of_dict(self.map_data.no_carpet_areas),
@@ -101,6 +97,8 @@ class XiaomiCloudMapExtractorData:
             "last_update_timestamp": self.last_update_timestamp and self.last_update_timestamp.strftime(
                 "%Y-%m-%d %H:%M:%S"),
             "last_successful_update_timestamp": self.last_successful_update_timestamp and self.last_successful_update_timestamp.strftime(
+                "%Y-%m-%d %H:%M:%S"),
+            "last_real_update_timestamp": self.last_real_update_timestamp and self.last_real_update_timestamp.strftime(
                 "%Y-%m-%d %H:%M:%S"),
             "status": self.status,
         }

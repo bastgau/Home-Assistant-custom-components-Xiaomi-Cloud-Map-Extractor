@@ -1,19 +1,18 @@
-from dataclasses import dataclass
-import logging
-import json
 import base64
+import json
+import logging
 from typing import Self, Any
 from dataclasses import dataclass
 
-from miio.miot_device import MiotDevice
 from miio.exceptions import DeviceException
+from miio.miot_device import MiotDevice
 from vacuum_map_parser_base.map_data import MapData
+from vacuum_map_parser_xiaomi.aes_decryptor import gen_md5_key
 from vacuum_map_parser_xiaomi.map_data_parser import XiaomiMapDataParser
 from vacuum_map_parser_xiaomi.status_mapping import get_status_mapping
-from vacuum_map_parser_xiaomi.aes_decryptor import gen_md5_key
 
-from .base.vacuum_v2 import BaseXiaomiCloudVacuumV2
 from .base.model import VacuumConfig, VacuumApi
+from .base.vacuum_v2 import BaseXiaomiCloudVacuumV2
 from ..utils.exceptions import FailedConnectionException
 
 
