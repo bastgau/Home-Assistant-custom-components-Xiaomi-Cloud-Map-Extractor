@@ -715,7 +715,7 @@ class XiaomiCloudConnector:
         return next(matching_device, None)
 
     async def get_other_info(self: Self, device_id: str, method: str, parameters: dict) -> Any:
-        url = self.get_api_url('sg') + "/v2/home/rpc/" + device_id
+        url = self.get_api_url() + "/v2/home/rpc/" + device_id
         params = {
             "data": json.dumps({"method": method, "params": parameters}, separators=(",", ":"))
         }
