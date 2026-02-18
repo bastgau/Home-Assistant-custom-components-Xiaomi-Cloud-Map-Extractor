@@ -118,11 +118,24 @@ class XiaomiCloudVacuum(BaseXiaomiCloudVacuumV2):
     async def get_map_name(self: Self) -> str:
         response = self._miot_device.get_property_by(self._vacuum_map.siid,
                                                              self._vacuum_map.piid)[0].get("value")
+        
+        if response is None:
+            return ""
 
         if isinstance(response, int):
             return response
-        else:
-            return json.loads(response).get("obj_name", "").split("/")[-1]
+        
+        # New models → name is plain string
+        if isinstance(response, str) and "/" in response:
+            return response.split("/")[-1]
+
+        # Older models → JSON
+        try:
+            data = json.loads(response)
+            return data.get("obj_name", "").split("/")[-1]
+        except Exception:
+            _LOGGER.debug("Unknown map name format: %s", response)
+            return ""
 
     async def get_map_url(self, map_name: str) -> str | None:
         return await self.get_fallback_map_url(map_name)
