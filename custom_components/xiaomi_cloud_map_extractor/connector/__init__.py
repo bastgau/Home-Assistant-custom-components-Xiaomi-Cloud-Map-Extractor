@@ -1,3 +1,4 @@
+import hashlib
 import logging
 from collections.abc import Callable
 from datetime import datetime
@@ -60,6 +61,7 @@ class XiaomiCloudMapExtractorConnector:
     _connector_config: XiaomiCloudConnectorConfig | None
     _forced_refresh: bool
     _auto_update: bool
+    _last_hash: str | None
 
     def __init__(
         self: Self,
@@ -78,6 +80,7 @@ class XiaomiCloudMapExtractorConnector:
         self._used_api = self._config.used_api
         self._forced_refresh = False
         self._auto_update = True
+        self._last_hash = None
 
     async def get_data(self: Self) -> XiaomiCloudMapExtractorData:
         if self._should_get_map():
@@ -98,8 +101,9 @@ class XiaomiCloudMapExtractorConnector:
                     self._connector_config, self._session_creator
                 )
 
-        if not self._is_authenticated():
-            _LOGGER.debug("Logging in...")
+        authenticated = self._is_authenticated()
+        _LOGGER.debug("Is user authenticated: %s", authenticated)
+        if not authenticated:
             if self._config.username is None or self._config.password is None:
                 raise FailedLoginException()
             await self._cloud_connector.login_with_credentials(self._config.username, self._config.password)
@@ -154,6 +158,13 @@ class XiaomiCloudMapExtractorConnector:
             self._map_cache.status = XiaomiCloudMapExtractorConnectorStatus.OK
             self._map_cache.last_successful_update_timestamp = datetime.now()
             self._map_cache.two_factor_url = None
+            if self._last_hash != (new_hash := hashlib.sha256(self._map_cache.map_data_raw).hexdigest()):
+                _LOGGER.debug("Old hash: '%s', New hash: '%s'", self._last_hash, new_hash)
+                self._last_hash = new_hash
+                self._map_cache.last_real_update_timestamp = self._map_cache.last_successful_update_timestamp
+            else:
+                _LOGGER.debug("Hash not changed: '%s'", self._last_hash)
+
         except DeviceNotFoundException as e:
             self._map_cache.status = XiaomiCloudMapExtractorConnectorStatus.DEVICE_NOT_FOUND
             raise e

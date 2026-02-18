@@ -1,21 +1,19 @@
-from dataclasses import dataclass
-import logging
-import json
 import base64
-from typing import Self, Any
+import json
+import logging
 from dataclasses import dataclass
+from typing import Self, Any
 
-from miio.miot_device import MiotDevice
 from miio.exceptions import DeviceException
+from miio.miot_device import MiotDevice
 from vacuum_map_parser_base.map_data import MapData
+from vacuum_map_parser_xiaomi.aes_decryptor import gen_md5_key
 from vacuum_map_parser_xiaomi.map_data_parser import XiaomiMapDataParser
 from vacuum_map_parser_xiaomi.status_mapping import get_status_mapping
-from vacuum_map_parser_xiaomi.aes_decryptor import gen_md5_key
 
-from .base.vacuum_v2 import BaseXiaomiCloudVacuumV2
 from .base.model import VacuumConfig, VacuumApi
+from .base.vacuum_v2 import BaseXiaomiCloudVacuumV2
 from ..utils.exceptions import FailedConnectionException
-
 
 _LOGGER = logging.getLogger(__name__)
 OFF_UPDATES = 3
@@ -31,7 +29,12 @@ class XiaomiVacuumPropertyMapping:
     piid: int = 1
 
 _NON_STANDARD_MAP_PROP = [
-    (["xiaomi.vacuum.b108gl"], XiaomiVacuumPropertyMapping(siid=7)),
+    (
+        [
+            "xiaomi.vacuum.b108gl",
+        ],
+        XiaomiVacuumPropertyMapping(siid=7),
+    ),
     (
         [
             "xiaomi.vacuum.b108gp",
@@ -45,7 +48,6 @@ _NON_STANDARD_MAP_PROP = [
     (
         [
             "xiaomi.vacuum.b106bk",
-            "xiaomi.vacuum.b106eu",
             "xiaomi.vacuum.b106tr",
             "xiaomi.vacuum.b112",
             "xiaomi.vacuum.b112bk",
@@ -54,9 +56,7 @@ _NON_STANDARD_MAP_PROP = [
             "xiaomi.vacuum.c101",
             "xiaomi.vacuum.c101eu",
             "xiaomi.vacuum.c102",
-            "xiaomi.vacuum.c103",
             "xiaomi.vacuum.c104",
-            "xiaomi.vacuum.d106gl",
             "xiaomi.vacuum.e101gl",
         ],
         XiaomiVacuumPropertyMapping(piid=2),
