@@ -297,6 +297,7 @@ class XiaomiCloudMapExtractorFlowHandler(ConfigFlow, domain=DOMAIN):
                 )
                 if self.source != SOURCE_REAUTH:
                     self._abort_if_unique_id_configured()
+                self._connector.server = self._cloud_vacuum.server
                 await save_connector_config(self.hass, self._cloud_vacuum.mac, self._connector.to_config())
                 if existing_entry or self.source == SOURCE_REAUTH:
                     data = existing_entry.data.copy()
