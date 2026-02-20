@@ -76,7 +76,7 @@ class XiaomiCloudMapExtractorConnector:
         self._vacuum_connector: BaseXiaomiCloudVacuum | None = None
         self._map_cache = XiaomiCloudMapExtractorData()
         self._status: XiaomiCloudMapExtractorConnectorStatus = XiaomiCloudMapExtractorConnectorStatus.UNINITIALIZED
-        self._server = None
+        self._server = self._config.server
         self._used_api = self._config.used_api
         self._forced_refresh = False
         self._auto_update = True
