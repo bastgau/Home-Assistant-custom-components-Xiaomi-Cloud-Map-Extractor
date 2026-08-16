@@ -55,6 +55,9 @@ _LATE_DRAWABLES = (Drawable.VACUUM_POSITION, Drawable.PATH)
 # its own room by 15 mm.
 _ROOM_MATCH_TOLERANCE = 300
 
+# A full turn in milliradians, the ceiling of any heading on models using them.
+_MAX_MILLIRADIANS = 2000 * math.pi
+
 @dataclass
 class XiaomiVacuumPropertyMapping:
     """Dataclass containing mapping for map property"""
@@ -79,12 +82,20 @@ class XiaomiVacuumPropertyMapping:
     # `unpack_map`; `_parse_session_path` decodes it instead.
     session_path_piid: int | None = None
 
+    # Whether this model expresses headings in milliradians. On b108gl the dock
+    # reports 1570, which is pi/2 x 1000, and every reading stays below
+    # 2 pi x 1000. XiaomiMapDataParser reads such values as centi-degrees, so
+    # both the live position and the charger need converting.
+    yaw_in_milliradians: bool = False
+
 _NON_STANDARD_MAP_PROP = [
     (
         [
             "xiaomi.vacuum.b108gl",
         ],
-        XiaomiVacuumPropertyMapping(siid=7, position_piid=4, session_path_piid=2),
+        XiaomiVacuumPropertyMapping(
+            siid=7, position_piid=4, session_path_piid=2, yaw_in_milliradians=True
+        ),
     ),
     (
         [
@@ -122,33 +133,48 @@ class XiaomiCloudVacuum(BaseXiaomiCloudVacuumV2):
 
         self._miot_device = MiotDevice(self._host, self._token, timeout=2)
 
-        self._xiaomi_map_data_parser = XiaomiMapDataParser(
-            vacuum_config.palette,
-            vacuum_config.sizes,
-            vacuum_config.drawables,
-            vacuum_config.image_config,
-            vacuum_config.texts
-        )
-
         self._status_mapping = _STATUS_MAPPING_OVERRIDES.get(self.model) or get_status_mapping(self.model)
         self._off_counter = 0
 
-        # XiaomiMapDataParser.parse() ends by drawing the map, so the position and
-        # the path this connector fetches afterwards would never reach the image.
-        # They get painted in a second pass by this generator, restricted to those
-        # two layers so nothing already drawn is repainted, and pinned to no
-        # rotation so the map is not turned a second time.
+        self._vacuum_map = next((mapping for models, mapping in _NON_STANDARD_MAP_PROP if self.model in models), XiaomiVacuumPropertyMapping())
+
+        # XiaomiMapDataParser.parse() ends by drawing the map, so anything this
+        # connector completes afterwards would never reach the image. Those layers
+        # are taken away from the parser and painted in a second pass instead, so
+        # each one is still drawn exactly once.
+        #
+        # The charger only moves across when its heading has to be corrected.
+        #
+        # Nothing moves across at all on a rotated map: the parser turns the
+        # raster as its last act, while Point.to_img() maps coordinates in the
+        # unrotated frame, so a late pass would draw in the wrong place. The
+        # parser then keeps every layer and behaves exactly as before -- it
+        # simply has no telemetry to draw.
         self._image_rotation = vacuum_config.image_config.rotate
-        self._late_drawables = [d for d in vacuum_config.drawables if d in _LATE_DRAWABLES]
+        late: list[Drawable] = []
+        if self._image_rotation:
+            _LOGGER.debug("Map is rotated by %s, drawing everything in the parser",
+                          self._image_rotation)
+        else:
+            late = [d for d in vacuum_config.drawables if d in _LATE_DRAWABLES]
+            if self._vacuum_map.yaw_in_milliradians and Drawable.CHARGER in vacuum_config.drawables:
+                late.append(Drawable.CHARGER)
+        self._late_drawables = late
+
+        self._xiaomi_map_data_parser = XiaomiMapDataParser(
+            vacuum_config.palette,
+            vacuum_config.sizes,
+            [d for d in vacuum_config.drawables if d not in late],
+            vacuum_config.image_config,
+            vacuum_config.texts
+        )
         self._late_image_generator = ImageGenerator(
             vacuum_config.palette,
             vacuum_config.sizes,
-            self._late_drawables,
+            late,
             replace(vacuum_config.image_config, rotate=0),
             [],
         )
-
-        self._vacuum_map = next((mapping for models, mapping in _NON_STANDARD_MAP_PROP if self.model in models), XiaomiVacuumPropertyMapping())
 
     @property
     def should_update_map(self: Self) -> bool:
@@ -219,6 +245,7 @@ class XiaomiCloudVacuum(BaseXiaomiCloudVacuumV2):
 
     async def get_map(self: Self) -> tuple[MapData, bytes]:
         map_data, raw_map_data = await super().get_map()
+        self._fix_charger_heading(map_data)
         self._apply_realtime_position(map_data)
         self._apply_vacuum_room(map_data)
         await self._apply_session_path(map_data)
@@ -272,6 +299,26 @@ class XiaomiCloudVacuum(BaseXiaomiCloudVacuumV2):
         map_data.vacuum_room_name = room.name or None
         _LOGGER.debug("Vacuum room: %s (%s)", map_data.vacuum_room, map_data.vacuum_room_name)
 
+    def _fix_charger_heading(self: Self, map_data: MapData) -> None:
+        """Restore the charger heading on models reporting milliradians.
+
+        _json_yaw_to_degrees treats anything above 180 as centi-degrees, so a
+        dock at 1570 milliradians -- pi/2 x 1000, due north -- is reported as
+        15.7 degrees, and its half-disc is drawn pointing the wrong way.
+
+        The original value is recoverable exactly: headings never exceed
+        2 pi x 1000, so the parser's `% 180` fold can never have fired and its
+        output is simply the reading divided by 100.
+        """
+        charger = map_data.charger
+        if not self._vacuum_map.yaw_in_milliradians or charger is None or charger.a is None:
+            return
+        if not 0 <= charger.a <= _MAX_MILLIRADIANS / 100:
+            _LOGGER.debug("Charger heading %s is not a folded milliradian reading", charger.a)
+            return
+        charger.a = math.degrees(charger.a * 100 / 1000) % 360
+        _LOGGER.debug("Charger heading corrected to %.1f degrees", charger.a)
+
     def _draw_late_overlays(self: Self, map_data: MapData) -> None:
         """Paint the layers filled in after the parser drew the map.
 
@@ -287,12 +334,6 @@ class XiaomiCloudVacuum(BaseXiaomiCloudVacuumV2):
         if not self._late_drawables:
             return
         if map_data.image is None or map_data.image.is_empty:
-            return
-        if self._image_rotation:
-            _LOGGER.debug(
-                "Skipping vacuum and path overlays: image is rotated by %s",
-                self._image_rotation,
-            )
             return
         try:
             self._late_image_generator.draw_map(map_data)
@@ -434,8 +475,7 @@ class XiaomiCloudVacuum(BaseXiaomiCloudVacuumV2):
             return
 
         angle = None
-        if len(position) > 2:
-            # The third element is a heading in milliradians, kept in [0, 360).
+        if len(position) > 2 and self._vacuum_map.yaw_in_milliradians:
             angle = math.degrees(float(position[2]) / 1000.0) % 360
 
         map_data.vacuum_position = Point(float(position[0]), float(position[1]), angle)
