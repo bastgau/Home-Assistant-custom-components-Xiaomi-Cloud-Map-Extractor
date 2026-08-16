@@ -79,4 +79,9 @@ class XiaomiCloudMapExtractorEntity(CoordinatorEntity[XiaomiCloudMapExtractorDat
             attributes["last_update_timestamp"] = data.last_update_timestamp
         if data.last_successful_update_timestamp:
             attributes["last_successful_update_timestamp"] = data.last_successful_update_timestamp
+        # Only set when the downloaded map actually differs from the previous one,
+        # so this is the timestamp of the last real change rather than of the last
+        # successful poll. It was previously visible in diagnostics only.
+        if data.last_real_update_timestamp:
+            attributes["last_real_update_timestamp"] = data.last_real_update_timestamp
         return attributes
