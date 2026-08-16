@@ -5,11 +5,13 @@ import logging
 import math
 import struct
 import zlib
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Self, Any
 
 from miio.exceptions import DeviceException
 from miio.miot_device import MiotDevice
+from vacuum_map_parser_base.config.drawable import Drawable
+from vacuum_map_parser_base.image_generator import ImageGenerator
 from vacuum_map_parser_base.map_data import MapData, Path, Point
 from vacuum_map_parser_xiaomi.aes_decryptor import gen_md5_key
 from vacuum_map_parser_xiaomi.map_data_parser import XiaomiMapDataParser
@@ -42,6 +44,10 @@ _STATUS_MAPPING_OVERRIDES: dict[str, XiaomiVacuumStatusMapping] = {
 # One record of the in-session path object: a mode flag, then the coordinates
 # as little-endian int32 millimetres in the map's own frame.
 _SESSION_PATH_RECORD = struct.Struct("<Bii")
+
+# Layers this connector fills in after the parser has already drawn the map, and
+# which therefore have to be painted in a second pass.
+_LATE_DRAWABLES = (Drawable.VACUUM_POSITION, Drawable.PATH)
 
 @dataclass
 class XiaomiVacuumPropertyMapping:
@@ -121,6 +127,21 @@ class XiaomiCloudVacuum(BaseXiaomiCloudVacuumV2):
         self._status_mapping = _STATUS_MAPPING_OVERRIDES.get(self.model) or get_status_mapping(self.model)
         self._off_counter = 0
 
+        # XiaomiMapDataParser.parse() ends by drawing the map, so the position and
+        # the path this connector fetches afterwards would never reach the image.
+        # They get painted in a second pass by this generator, restricted to those
+        # two layers so nothing already drawn is repainted, and pinned to no
+        # rotation so the map is not turned a second time.
+        self._image_rotation = vacuum_config.image_config.rotate
+        self._late_drawables = [d for d in vacuum_config.drawables if d in _LATE_DRAWABLES]
+        self._late_image_generator = ImageGenerator(
+            vacuum_config.palette,
+            vacuum_config.sizes,
+            self._late_drawables,
+            replace(vacuum_config.image_config, rotate=0),
+            [],
+        )
+
         self._vacuum_map = next((mapping for models, mapping in _NON_STANDARD_MAP_PROP if self.model in models), XiaomiVacuumPropertyMapping())
 
     @property
@@ -192,8 +213,37 @@ class XiaomiCloudVacuum(BaseXiaomiCloudVacuumV2):
 
     async def get_map(self: Self) -> tuple[MapData, bytes]:
         map_data, raw_map_data = await super().get_map()
+        self._apply_realtime_position(map_data)
         await self._apply_session_path(map_data)
+        self._draw_late_overlays(map_data)
         return map_data, raw_map_data
+
+    def _draw_late_overlays(self: Self, map_data: MapData) -> None:
+        """Paint the layers filled in after the parser drew the map.
+
+        The parser draws as the last step of parse(), so the position and path
+        fetched afterwards are in MapData but absent from the image. Only the
+        missing layers are painted, over the image the parser produced.
+
+        Skipped when a rotation is configured: the parser has already turned the
+        raster, while Point.to_img() maps coordinates in the unrotated frame, so
+        anything drawn now would land in the wrong place. Fixing that belongs
+        upstream, where the telemetry could be supplied before the map is drawn.
+        """
+        if not self._late_drawables:
+            return
+        if map_data.image is None or map_data.image.is_empty:
+            return
+        if self._image_rotation:
+            _LOGGER.debug(
+                "Skipping vacuum and path overlays: image is rotated by %s",
+                self._image_rotation,
+            )
+            return
+        try:
+            self._late_image_generator.draw_map(map_data)
+        except Exception as err:  # noqa: BLE001 - a missing overlay must never break the map
+            _LOGGER.debug("Could not draw vacuum and path overlays: %s", err)
 
     async def _apply_session_path(self: Self, map_data: MapData) -> None:
         """Fill in the cleaning path from the in-session path object.
@@ -282,16 +332,14 @@ class XiaomiCloudVacuum(BaseXiaomiCloudVacuumV2):
             device_id=str(self._device_id),
         )
         map_data = self.map_data_parser.parse(decoded_map)
-        # EXPERIMENTAL. Reports what the downloaded object actually carried, so the
-        # session map object can be compared against the persisted one without
-        # having to download diagnostics.
+        # Reports the telemetry the downloaded map itself carried, before this
+        # connector fills in whatever the model publishes elsewhere.
         _LOGGER.debug(
             "Parsed telemetry: vacuum_position=%s, path=%d point(s), mop_path=%d point(s)",
             map_data.vacuum_position,
             sum(len(sub) for sub in map_data.path.path) if map_data.path else 0,
             sum(len(sub) for sub in map_data.mop_path.path) if map_data.mop_path else 0,
         )
-        self._apply_realtime_position(map_data)
         return map_data
 
     def _apply_realtime_position(self: Self, map_data: MapData) -> None:
