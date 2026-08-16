@@ -49,6 +49,12 @@ _SESSION_PATH_RECORD = struct.Struct("<Bii")
 # which therefore have to be painted in a second pass.
 _LATE_DRAWABLES = (Drawable.VACUUM_POSITION, Drawable.PATH)
 
+# How far outside every room the vacuum may sit and still be attributed to the
+# closest one. Room bounds are rounded to the pixel, so a vacuum against a wall
+# can fall just outside them all -- on the reference map the dock itself misses
+# its own room by 15 mm.
+_ROOM_MATCH_TOLERANCE = 300
+
 @dataclass
 class XiaomiVacuumPropertyMapping:
     """Dataclass containing mapping for map property"""
@@ -214,9 +220,57 @@ class XiaomiCloudVacuum(BaseXiaomiCloudVacuumV2):
     async def get_map(self: Self) -> tuple[MapData, bytes]:
         map_data, raw_map_data = await super().get_map()
         self._apply_realtime_position(map_data)
+        self._apply_vacuum_room(map_data)
         await self._apply_session_path(map_data)
         self._draw_late_overlays(map_data)
         return map_data, raw_map_data
+
+    @staticmethod
+    def _apply_vacuum_room(map_data: MapData) -> None:
+        """Work out which room the vacuum stands in, from the room bounds.
+
+        XiaomiImageParser.get_current_vacuum_room() would answer this per pixel,
+        but it is never called by the parser and needs the decoded pixel grid,
+        which MapData does not keep. The room bounding boxes it does keep are
+        enough here: on the reference map only two of six rooms overlap, by one
+        pixel each, so the answer is unambiguous almost everywhere.
+
+        Where boxes do overlap the smallest one wins, being the most specific.
+        A vacuum outside every box falls back to the closest room within
+        _ROOM_MATCH_TOLERANCE, which covers the pixel rounding of the bounds.
+        """
+        if map_data.vacuum_position is None or not map_data.rooms:
+            return
+        if map_data.vacuum_room is not None:
+            return
+
+        x, y = map_data.vacuum_position.x, map_data.vacuum_position.y
+        inside, inside_area = None, None
+        closest, closest_distance = None, None
+
+        for room in map_data.rooms.values():
+            gap_x = max(room.x0 - x, 0, x - room.x1)
+            gap_y = max(room.y0 - y, 0, y - room.y1)
+            distance = math.hypot(gap_x, gap_y)
+            area = abs(room.x1 - room.x0) * abs(room.y1 - room.y0)
+            if distance == 0 and (inside_area is None or area < inside_area):
+                inside, inside_area = room, area
+            if closest_distance is None or distance < closest_distance:
+                closest, closest_distance = room, distance
+
+        room = inside
+        if room is None and closest_distance is not None and closest_distance <= _ROOM_MATCH_TOLERANCE:
+            room = closest
+            _LOGGER.debug("Vacuum is %.0f mm outside every room, closest wins", closest_distance)
+        if room is None:
+            _LOGGER.debug("Vacuum at %.0f,%.0f matches no room", x, y)
+            return
+
+        map_data.vacuum_room = room.number
+        # An unnamed room reports no name rather than an empty one; the room id
+        # sensor still identifies it.
+        map_data.vacuum_room_name = room.name or None
+        _LOGGER.debug("Vacuum room: %s (%s)", map_data.vacuum_room, map_data.vacuum_room_name)
 
     def _draw_late_overlays(self: Self, map_data: MapData) -> None:
         """Paint the layers filled in after the parser drew the map.
