@@ -52,12 +52,20 @@ class XiaomiVacuumPropertyMapping:
     # the map, and yaw in milliradians.
     position_piid: int | None = None
 
+    # EXPERIMENTAL. Property id naming the in-session map object, when the model
+    # publishes one besides the persisted map named by `piid`. On b108gl `piid`
+    # resolves to object .../3 -- a persisted map (map_type 1) carrying neither
+    # "paths" nor "position" -- while this one resolves to .../1, an object that
+    # does not appear in the saved map list and may hold the live path.
+    # Leave None to keep downloading the object named by `piid`.
+    session_map_piid: int | None = None
+
 _NON_STANDARD_MAP_PROP = [
     (
         [
             "xiaomi.vacuum.b108gl",
         ],
-        XiaomiVacuumPropertyMapping(siid=7, position_piid=4),
+        XiaomiVacuumPropertyMapping(siid=7, position_piid=4, session_map_piid=2),
     ),
     (
         [
@@ -142,11 +150,12 @@ class XiaomiCloudVacuum(BaseXiaomiCloudVacuumV2):
         return self._xiaomi_map_data_parser
     
     async def get_map_name(self: Self) -> str:
-        response = self._miot_device.get_property_by(self._vacuum_map.siid,
-                                                     self._vacuum_map.piid)[0].get("value")
+        piid = self._vacuum_map.session_map_piid or self._vacuum_map.piid
+        response = self._miot_device.get_property_by(self._vacuum_map.siid, piid)[0].get("value")
+        _LOGGER.debug("Map object from %d/%d: %r", self._vacuum_map.siid, piid, response)
 
         if response is None:
-            return super().get_map_name()
+            return await super().get_map_name()
 
         if isinstance(response, int):
             return str(response)
@@ -158,7 +167,7 @@ class XiaomiCloudVacuum(BaseXiaomiCloudVacuumV2):
                 if isinstance(response, str) and "/" in response:
                     map_name = response
             if map_name is None:
-                return super().get_map_name()
+                return await super().get_map_name()
             return map_name.split("/")[-1]
 
     async def get_map_url(self, map_name: str) -> str | None:
@@ -179,6 +188,15 @@ class XiaomiCloudVacuum(BaseXiaomiCloudVacuumV2):
             device_id=str(self._device_id),
         )
         map_data = self.map_data_parser.parse(decoded_map)
+        # EXPERIMENTAL. Reports what the downloaded object actually carried, so the
+        # session map object can be compared against the persisted one without
+        # having to download diagnostics.
+        _LOGGER.debug(
+            "Parsed telemetry: vacuum_position=%s, path=%d point(s), mop_path=%d point(s)",
+            map_data.vacuum_position,
+            sum(len(sub) for sub in map_data.path.path) if map_data.path else 0,
+            sum(len(sub) for sub in map_data.mop_path.path) if map_data.mop_path else 0,
+        )
         self._apply_realtime_position(map_data)
         return map_data
 
