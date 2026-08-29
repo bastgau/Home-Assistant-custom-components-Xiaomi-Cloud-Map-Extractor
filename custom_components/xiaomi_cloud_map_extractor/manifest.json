@@ -2,7 +2,7 @@
   "domain": "xiaomi_cloud_map_extractor",
   "name": "Xiaomi Cloud Map Extractor",
   "codeowners": [
-    "@PiotrMachowski"
+    "@PiotrMachowski", "@bastgau"
   ],
   "config_flow": true,
   "dependencies": [],
@@ -22,5 +22,5 @@
     "vacuum-map-parser-ijai==0.1.0",
     "vacuum-map-parser-xiaomi==0.1.3"
   ],
-  "version": "v3.0.0-beta"
+  "version": "v3.0.0-alpha-26-forked"
 }
